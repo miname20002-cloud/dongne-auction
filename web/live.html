@@ -66,15 +66,15 @@ img{display:block;max-width:100%}
 .toast.ok{border-color:rgba(223,255,32,.4)}
 .toast.err{border-color:rgba(255,77,77,.45)}
 
-.foot{padding:40px 0 60px;border-top:1px solid var(--line);text-align:center}
-.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.85}
+.foot{padding:40px 0 calc(60px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);text-align:center}
+.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.4;white-space:nowrap}
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--lime);outline-offset:3px}
 
 
 /* ── live 전용 ── */
-body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 
 /* 진행 표시 */
 .prog{padding:10px 0 4px;display:flex;align-items:center;gap:5px;line-height:0}
@@ -91,6 +91,32 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 .photo{margin:14px auto 0;position:relative;aspect-ratio:1;max-width:280px;
   border-radius:20px;overflow:hidden;background:#f7f7f4}
 .photo img{width:100%;height:100%;object-fit:contain;padding:7%}
+
+/* 이미지 안 카운트다운 — 3층 구조 (트랙 / 진행 arc / 내부 원)
+   ⚠️ border + box-shadow 를 겹치는 방식으로 되돌리지 말 것.
+      테두리가 겹치면 원이 두꺼워지고 안티에일리어싱이 어긋나 찌그러져 보인다. */
+.timer{position:absolute;top:10px;right:10px;
+  width:88px;height:88px;aspect-ratio:1;flex-shrink:0;border-radius:50%}
+.timer .ring{position:absolute;inset:0;display:block;width:88px;height:88px;
+  transform:rotate(90deg);shape-rendering:geometricPrecision} /* 6시(하단) 기준 — 소모는 시계방향 */
+/* disc가 track 안쪽과 0.75px 겹치게 해서 흰 상품 이미지가 비치는 이중 링을 없앤다. */
+.timer .disc{fill:rgba(10,10,9,.94)}
+.timer .track{fill:none;stroke:var(--line);stroke-width:5;vector-effect:non-scaling-stroke}
+.timer .arc{fill:none;stroke:var(--lime);stroke-width:5;stroke-linecap:round;
+  vector-effect:non-scaling-stroke;stroke-dasharray:100;stroke-dashoffset:0;
+  transition:stroke-dashoffset .25s linear,stroke .2s}
+.timer .tv{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center}
+.timer .k{font:800 8.5px Pretendard,sans-serif;color:var(--muted);letter-spacing:-.01em}
+.timer .n{margin:2px 0 1px;font:900 26px/1 Archivo,sans-serif;letter-spacing:-.045em;
+  color:var(--lime);font-variant-numeric:tabular-nums;transition:color .2s}
+.timer .u{font:700 9px Pretendard,sans-serif;color:var(--muted)}
+.timer.hot .arc{stroke:var(--live)}
+.timer.hot .n{color:var(--live)}
+.timer.urgent .n{animation:tpulse 1s ease-in-out infinite}
+.timer.over .k,.timer.over .u{display:none}
+.timer.over .n{font-size:16px;color:var(--muted)}
+@keyframes tpulse{0%,100%{opacity:1}50%{opacity:.5}}
 .name{margin-top:18px;font-size:clamp(20px,5.6vw,26px);font-weight:800;letter-spacing:-.05em}
 
 /* 현재가 */
@@ -103,14 +129,6 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 .price .holder{margin-top:10px;font-size:12px;color:var(--muted)}
 .price .holder b{color:var(--text);font-weight:800}
 .price .holder.mine b{color:var(--lime)}
-
-/* 타이머 */
-.clock{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.clock .t{font:700 clamp(34px,10vw,48px)/1 Archivo,sans-serif;letter-spacing:-.04em;
-  font-variant-numeric:tabular-nums}
-.clock .t.hot{color:var(--live);font-weight:900}
-.clock .lab{margin-top:9px;font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.clock .bids{margin-top:8px;font-size:12px;color:var(--dim)}
 
 /* 연장 배너 */
 .ext{margin-top:0;padding:0 12px;border-radius:12px;max-height:0;overflow:hidden;
@@ -163,25 +181,14 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 .done .mine{color:var(--lime);font-weight:800}
 
 /* 회차 종료 후 내 성과 요약 */
-.myresult{margin-top:22px;padding:26px 22px;border:1px solid var(--line);
-  border-radius:18px;text-align:center}
-.myresult .en{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.myresult .score{margin-top:14px;font:900 clamp(34px,9vw,44px)/1 Archivo,sans-serif;
-  letter-spacing:-.05em}
-.myresult .score b{color:var(--lime)}
-.myresult .score small{font:800 15px Pretendard,sans-serif;color:var(--muted);margin-left:7px}
-.myresult .tier{margin-top:14px;display:inline-block;padding:7px 14px;
-  border-radius:999px;border:1px solid var(--line);
-  font:900 12px Archivo,sans-serif;letter-spacing:.14em;color:var(--muted)}
-.myresult .tier.on{border-color:rgba(223,255,32,.45);color:var(--lime)}
-.myresult p{margin-top:15px;color:var(--muted);font-size:12.5px;line-height:1.8}
 .done .p{font:900 18px Archivo,sans-serif;color:var(--sold);letter-spacing:-.04em;white-space:nowrap}
 .done .p span{display:block;text-align:right;font-size:10.5px;font-weight:500;color:var(--dim);letter-spacing:-.02em;margin-bottom:2px}
 
-/* 입찰 바 */
-.bidbar{position:fixed;left:0;right:0;bottom:0;z-index:60;
-  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-  background:rgba(10,10,9,.96);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+/* 입찰창 — ⚠️ position:fixed 로 되돌리지 말 것.
+   fixed 는 뷰포트 하단에 붙어서, 콘텐츠가 짧으면 현재가와 입찰창 사이에
+   화면 높이만큼의 빈 공간이 생긴다. 흐름 안에 두어야 현재가 바로 아래에 온다. */
+.bidbar{margin-top:22px;padding:16px;text-align:left;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px}
 .bidlab{margin-bottom:6px;font:800 9.5px Archivo,sans-serif;
   letter-spacing:.18em;color:var(--dim)}
 .quickrow{display:flex;align-items:center;gap:10px;margin-top:8px}
@@ -213,7 +220,7 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 
 <body>
 <header class="top"><div class="wrap">
-  <div class="logo">동네<b>옥션</b></div>
+  <div class="logo"><b>동네</b>옥션</div>
   <div class="state" id="state"><i class="dot"></i><span id="stateTxt">연결 중</span></div>
 </div></header>
 
@@ -223,7 +230,21 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
   <!-- 진행 중 -->
   <section class="stage wrap hidden" id="stage">
     <div class="lotno" id="lotno">LOT 01</div>
-    <div class="photo"><img id="photo" src="" alt="" onerror="imgFail(this)"></div>
+    <div class="photo">
+      <img id="photo" src="" alt="" onerror="imgFail(this)">
+      <div class="timer" id="timer">
+        <svg class="ring" viewBox="0 0 88 88" aria-hidden="true">
+          <circle class="disc"  cx="44" cy="44" r="38.25"/>
+          <circle class="track" cx="44" cy="44" r="40" pathLength="100"/>
+          <circle class="arc" id="arc" cx="44" cy="44" r="40" pathLength="100"/>
+        </svg>
+        <div class="tv">
+          <div class="k">남은 시간</div>
+          <div class="n" id="clock">--</div>
+          <div class="u">초</div>
+        </div>
+      </div>
+    </div>
     <div class="name" id="name">—</div>
 
     <div class="price">
@@ -232,13 +253,24 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
       <div class="holder" id="holder"></div>
     </div>
 
-    <div class="clock">
-      <div class="t" id="clock">--</div>
-      <div class="lab">SECONDS LEFT</div>
-      <div class="bids" id="bids"></div>
-    </div>
-
     <div class="ext" id="ext">막판 입찰 · 30초 연장되었습니다</div>
+
+    <!-- 입찰창 — 현재가 바로 아래. 고정 바가 아니라 흐름 안의 카드다. -->
+    <div class="bidbar hidden" id="bidbar">
+      <div class="bidlab">입찰 금액</div>
+      <div class="custom">
+        <div class="box">
+          <input id="amt" type="text" inputmode="numeric" placeholder="원하는 금액 입력" aria-label="입찰 금액">
+          <span class="u" id="unit">원</span>
+        </div>
+        <button class="cta" id="bid">입찰</button>
+      </div>
+      <div class="quickrow">
+        <span class="qlab">빠른 선택</span>
+        <div class="quick" id="quick"></div>
+      </div>
+      <p class="bidnote" id="bidnote">현재가보다 높은 금액을 직접 입력하세요 · 1,000원 단위</p>
+    </div>
   </section>
 
   <!-- 대기 / 종료 -->
@@ -262,13 +294,8 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
       <a class="go hidden" id="goPredict" href="predict.html">예상 최종가 적으러 가기 →</a>
     </div>
 
-    <!-- 회차 종료 후에만 -->
-    <div class="myresult hidden" id="myresult">
-      <div class="en">MY RESULT</div>
-      <div class="score" id="myScore">— <small>최고가</small></div>
-      <div class="tier" id="myTier">—</div>
-      <p id="myDesc"></p>
-    </div>
+    <!-- 회차 종료 후에만 — 성적/등급은 result.html 이 유일 기준 -->
+    <a class="go hidden" id="goResult" href="result.html">오늘의 결과 보기 →</a>
   </section>
 
   <!-- 종료된 LOT -->
@@ -282,30 +309,14 @@ body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
 </main>
 
 <footer class="foot"><div class="wrap">
-  <div class="logo">동네<b>옥션</b></div>
-  <p>모의경매 · 실제 상품 판매가 아닙니다.<br>
-     결제·배송은 발생하지 않습니다.</p>
+  <div class="logo"><b>동네</b>옥션</div>
+  <p>모의경매 · 실제 상품 판매가 아닙니다 · 결제·배송 없음</p>
 </div></footer>
-
-<!-- 입찰 바 -->
-<div class="bidbar hidden" id="bidbar"><div class="wrap">
-  <div class="bidlab">입찰 금액</div>
-  <div class="custom">
-    <div class="box">
-      <input id="amt" type="text" inputmode="numeric" placeholder="원하는 금액 입력" aria-label="입찰 금액">
-      <span class="u" id="unit">원</span>
-    </div>
-    <button class="cta" id="bid">입찰</button>
-  </div>
-  <div class="quickrow">
-    <span class="qlab">빠른 선택</span>
-    <div class="quick" id="quick"></div>
-  </div>
-  <p class="bidnote" id="bidnote">현재가보다 높은 금액을 직접 입력하세요 · 1,000원 단위</p>
-</div></div>
 
 <script src="js/common.js"></script>
 <script>
+const RING_PATH = 100; /* SVG pathLength=100 — dashoffset을 %처럼 직접 쓴다 */
+let warnedMissingDuration = false;
 let STATE = null;
 let LOT = null;          // 현재 진행 LOT
 let lastPrice = 0;
@@ -317,26 +328,12 @@ let extTrack = { lot: null, closeAt: null };
 let sending = false;
 const wonLots = new Set();   /* 이미 알린 LOT */
 
-/* 등급 — LOT 개수가 5개든 10개든 같은 의미가 되도록 "비율" 기준.
-   입찰 횟수가 아니라 최종 최고가 LOT 수로 산정한다 (연타 유도 방지). */
-function tierOf(win, total){
-  if(!total || win <= 0) return {
-    name:"WATCHER", on:false,
-    desc:"오늘은 지켜보셨네요. 다음 회차엔 한 번 불러보세요."
-  };
-  const r = win / total;
-  const name = r >= .81 ? "SWEEP"
-             : r >= .61 ? "ACE"
-             : r >= .41 ? "HUNTER"
-             : r >= .21 ? "BIDDER"
-             :            "ROOKIE";
-  const tail = win === total ? " 오늘의 올킬입니다."
-             : r >= .61      ? " 거의 다 잡으셨습니다."
-             : r >= .41      ? " 감이 좋으시네요."
-             : "";
-  return { name, on:true,
-    desc:`${total}개 중 ${win}개에서 최종 최고가.` + tail };
-}
+/* ⚠️ 등급 계산은 여기 없다. result.html 한 곳에서만 한다.
+   과거 이 파일에 있던 tierOf() 는 확정 등급표와 어긋났다:
+     1/5  → ROOKIE (확정: BIDDER)
+     9/10 → SWEEP  (확정: ACE — SWEEP 은 100% 전용)
+   또한 state 에는 has_bid 가 없어 WATCHER 와 ROOKIE 를 구분할 수 없다.
+   그 판정은 action=result 만 할 수 있다. */
 
 /** 이 LOT 의 최종 최고가가 나인가 — 판정은 서버가 한다.
  *  (남의 session_id 는 응답에 포함되지 않는다) */
@@ -413,7 +410,7 @@ function render(s){
       h.className = "holder"; h.textContent = "아직 입찰이 없습니다";
     }
 
-    $("#bids").textContent = cur.bid_count + "회 입찰";
+    /* ⚠️ bid_count 는 서버 필드로 유지하되 화면에는 표시하지 않는다 — 연타 유도 방지 */
 
     /* 연장 감지 — 입찰한 사람이든 보고만 있는 사람이든 같은 경로로 정확히 1회 */
     if(extTrack.lot !== cur.lot_no){
@@ -464,7 +461,9 @@ function render(s){
 
     if(ended){
       t.textContent = "오늘 경매가 끝났습니다";
-      d.innerHTML = "결과와 예측왕은 잠시 후 발표됩니다.<br>내일 밤 9시에 다시 만나요.";
+      /* ⚠️ 다음 회차가 config 에 없는데 날짜를 약속하지 않는다.
+         (없는 약속은 재방문율 지표를 직접 오염시킨다) */
+      d.innerHTML = "오늘의 최종가와 예측왕을 결과에서 확인하세요.";
     }else if(between){
       /* LOT 사이 — 다음 상품으로 붙잡아둔다 */
       t.textContent = "다음 상품 준비 중";
@@ -478,21 +477,8 @@ function render(s){
     }
   }
 
-  /* 내 성과 — 회차가 끝났을 때만 노출 (LIVE 중엔 HUD 처럼 보이지 않게) */
-  const allLots = s.lots.length;
-  const myWins  = s.lots.filter(l => l.state === "closed" && isMine(l)).length;
-  const mr = $("#myresult");
-  if(s.phase === "ended" && allLots){
-    mr.classList.remove("hidden");
-    $("#myScore").innerHTML = `<b>${myWins}</b> / ${allLots} <small>최고가</small>`;
-    const t = tierOf(myWins, allLots);
-    const tierEl = $("#myTier");
-    tierEl.textContent = t.name;
-    tierEl.className = "tier" + (t.on ? " on" : "");
-    $("#myDesc").textContent = t.desc;
-  }else{
-    mr.classList.add("hidden");
-  }
+  /* 회차 종료 시 결과 화면으로 넘긴다. 성적·등급은 여기서 계산하지 않는다. */
+  $("#goResult").classList.toggle("hidden", s.phase !== "ended" || !s.lots.length);
 
   /* 종료된 LOT */
   const done = s.lots.filter(l => String(l.state).toLowerCase() === "closed" && l.final_price > 0)
@@ -600,6 +586,37 @@ async function sendBid(amount){
   }
 }
 
+/* 게이지 분모는 서버가 내려주는 config 원본 lot_duration 하나만 사용한다.
+   클라이언트 추정/하드코딩을 하지 않는다. 필드가 없으면 숫자 타이머는 정상 동작하고
+   게이지만 100%로 유지해 배포 누락을 눈에 띄게 만든다. */
+function resolveLotDuration(state){
+  const n = Number(state && state.lot_duration);
+  if(Number.isFinite(n) && n > 0) return n;
+  if(!warnedMissingDuration){
+    warnedMissingDuration = true;
+    console.warn('[timer] state.lot_duration missing — deploy latest Apps Script');
+  }
+  return 0;
+}
+
+function updateRing(left, lot){
+  const arc = document.getElementById('arc');
+  if(!arc) return;
+
+  const dur = resolveLotDuration(STATE);
+  const ratio = dur > 0 ? Math.max(0, Math.min(1, left / dur)) : 1;
+  const remain = RING_PATH * ratio;
+  const consumed = RING_PATH - remain;
+
+  /* 게이지 소모 방향: 6시(하단)에서 시작해 시계방향으로 빈 구간이 늘어난다.
+     남은 라임 arc는 '소모된 지점 → 다시 6시' 구간만 표시한다. */
+  arc.style.strokeDasharray = remain.toFixed(2) + " " + RING_PATH;
+  arc.style.strokeDashoffset = (-consumed).toFixed(2);
+  arc.style.opacity = ratio <= 0 ? "0" : "1";
+  arc.dataset.ratio = ratio.toFixed(4);
+  arc.dataset.duration = String(dur || 0);
+}
+
 /* ══════ 로컬 타이머 (서버 시간 기준) ══════ */
 setInterval(() => {
   /* 대기 화면 — 21:00 까지 */
@@ -617,11 +634,17 @@ setInterval(() => {
   if(!LOT || !LOT.close_at) return;
   const left = secondsUntil(LOT.close_at);
   if(left === null) return;
-  const c = $("#clock");
   const s = Math.max(0, Math.ceil(left));
 
-  c.textContent = s > 0 ? s : "마감";
-  c.className = "t" + (s <= 10 && s > 0 ? " hot" : "");
+  /* 판정은 전부 서버 close_at + server_time 오프셋(secondsUntil). 여기서는 표시만 한다. */
+  $("#clock").textContent = s > 0 ? s : "마감";
+  $("#timer").className = "timer"
+    + (s <= 0            ? " over"   : "")
+    + (s <= 30 && s > 0  ? " hot"    : "")
+    + (s <= 10 && s > 0  ? " urgent" : "");
+
+  /* 진행 게이지 — 서버 close_at 기준 left를 시각화만 한다. */
+  updateRing(left, LOT);
 
   /* 막판엔 폴링을 조인다 */
   poller.setInterval(s <= 30 ? CONFIG.POLL.hot : CONFIG.POLL.live);
