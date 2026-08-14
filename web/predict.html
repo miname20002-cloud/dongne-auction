@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a09">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<title>나의 낙찰가는? — 동네옥션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#0a0a09;--panel:#131312;--panel2:#191918;
+  --text:#f4f4ef;--muted:#a09f98;--dim:#696963;--line:#292927;
+  --lime:#dfff20;--live:#ff4d4d;--sold:#ff7a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+a,button{font:inherit;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+button{border:0;background:none;cursor:pointer}
+input{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+.wrap{width:min(calc(100% - 32px),680px);margin:auto}
+.hidden{display:none!important}
+
+.top{position:sticky;top:0;z-index:40;background:rgba(10,10,9,.9);
+  backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.top .wrap{height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:15px;font-weight:800;letter-spacing:-.04em}
+.logo b{color:var(--lime)}
+.state{display:flex;gap:8px;align-items:center;font:800 11px Archivo,sans-serif;
+  letter-spacing:.1em;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.state.live{color:var(--live)}
+.state.live .dot{background:var(--live);box-shadow:0 0 14px rgba(255,77,77,.65);
+  animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.2}}
+
+.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:60px;background:var(--lime);color:#0a0a09;font-size:16px;font-weight:900;
+  letter-spacing:-.025em;border-radius:14px;
+  box-shadow:0 10px 28px rgba(223,255,32,.10);transition:filter .15s,box-shadow .15s}
+.cta:hover{filter:brightness(1.04)}
+.cta:active{transform:scale(.987)}
+.cta:disabled{background:var(--panel2);color:var(--dim);box-shadow:none;cursor:default}
+.cta.live{background:var(--live);color:#fff;box-shadow:0 10px 28px rgba(255,77,77,.14)}
+.cta.ghost{background:transparent;color:var(--text);
+  box-shadow:inset 0 0 0 1px var(--line)}
+
+.noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(135deg,#101010,#101010 10px,#151514 10px,#151514 20px);
+  color:var(--dim);font-size:11px;font-weight:700}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);
+  z-index:200;padding:13px 18px;border-radius:12px;background:#1d1d1b;
+  border:1px solid var(--line);color:var(--text);font-size:13px;font-weight:700;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  max-width:calc(100% - 40px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.ok{border-color:rgba(223,255,32,.4)}
+.toast.err{border-color:rgba(255,77,77,.45)}
+
+.foot{padding:40px 0 60px;border-top:1px solid var(--line);text-align:center}
+.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.85}
+
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+
+/* ── predict 전용 ── */
+body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+
+.head{padding:26px 0 22px;text-align:center}
+.head h1{font-size:clamp(28px,7.6vw,40px);line-height:1.12;
+  letter-spacing:-.055em;font-weight:800;color:var(--text)}
+.head p{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.8}
+.head p b{display:block;margin-top:3px;color:var(--text);font-size:14.5px;font-weight:900;letter-spacing:-.03em}
+
+/* 카운트다운 — 한 줄 알약 */
+.cdbar{margin-top:20px;display:inline-flex;align-items:center;gap:10px;
+  padding:9px 14px;border:1px solid var(--line);border-radius:999px}
+.cdbar .lab{font:800 9px Archivo,sans-serif;letter-spacing:.18em;color:var(--dim)}
+.cdbar .cd{font:700 15px Archivo,sans-serif;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.cdbar .cd i{font-style:normal;color:var(--dim);font-weight:500}
+.cdbar.closed{border-color:rgba(255,122,0,.4)}
+.cdbar.closed .cd{color:var(--sold);font-weight:900}
+
+/* 닉네임 — 한 줄로 축소 */
+.nick{margin-top:16px;display:inline-flex;align-items:center;gap:9px;
+  padding:0 13px;height:34px;border-radius:999px;background:var(--panel2)}
+.nick .lab,.nick .edit,.nick input{
+  display:block;height:16px;line-height:16px;
+  padding:0;margin:0;border:0;box-sizing:content-box}
+.nick .lab{flex:0 0 auto;font:800 9px/16px Archivo,sans-serif;
+  letter-spacing:.14em;color:var(--dim)}
+.nick input{flex:0 0 auto;width:92px;background:none;
+  font:800 13.5px/16px "Pretendard Variable",Pretendard,sans-serif;
+  letter-spacing:-.03em;text-align:center;color:var(--text);
+  -webkit-appearance:none;appearance:none}
+.nick input:focus{outline:none;color:var(--lime)}
+.nick .edit{flex:0 0 auto;font-size:10px;line-height:16px;color:var(--dim)}
+
+.sec{padding:24px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:18px}
+.sec-head .en{display:block;margin-bottom:6px;font:800 10px Archivo,sans-serif;
+  letter-spacing:.2em;color:var(--dim)}
+.sec-head h2{font-size:21px;letter-spacing:-.05em;font-weight:800}
+.sec-head .n{font:800 11px Archivo,sans-serif;color:var(--dim);letter-spacing:.08em}
+
+.rows{display:flex;flex-direction:column;gap:14px}
+.row{display:grid;grid-template-columns:108px 1fr;gap:16px;align-items:center;
+  padding:14px;background:var(--panel);border-radius:18px;
+  border:1px solid transparent;transition:border-color .18s}
+.row.done{border-color:rgba(223,255,32,.3)}
+.row .thumb{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;
+  background:#f7f7f4}
+.row .thumb img{width:100%;height:100%;object-fit:contain;padding:7%}
+.row .lot{position:absolute;left:8px;top:8px;z-index:2;padding:4px 7px;
+  border-radius:6px;background:rgba(10,10,9,.88);
+  font:800 10px/1 Archivo,sans-serif;letter-spacing:.02em;color:#f4f4ef}
+.row .body{min-width:0}
+.row .nm{font-size:16px;font-weight:800;letter-spacing:-.045em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .lab{flex:0 0 auto;font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.row .field{margin-top:9px;display:flex;align-items:center;gap:8px;min-width:0;
+  background:var(--panel2);border-radius:12px;padding:11px 13px;
+  border:1px solid var(--line);transition:border-color .18s}
+.row .field:focus-within{border-color:rgba(223,255,32,.5)}
+.row .field input{flex:1;min-width:0;background:none;border:0;
+  font:900 22px Archivo,sans-serif;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;text-align:right}
+.row .field input:focus{outline:none}
+.row .field input::placeholder{color:#5c5c56;font:800 14px Pretendard,sans-serif}
+.row .field .unit{flex:0 0 auto;font-size:13px;font-weight:800;color:var(--muted)}
+.row .field .mark{position:absolute;opacity:0}
+.row.done .nm::after{content:"\2713 저장됨";margin-left:8px;vertical-align:1px;
+  font-size:10.5px;font-weight:800;letter-spacing:-.02em;color:var(--lime)}
+
+.note{margin-top:20px;padding:14px;border:1px dashed var(--line);border-radius:12px;
+  color:var(--muted);font-size:12.5px;text-align:center;line-height:1.75}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+  background:rgba(10,10,9,.95);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+.bar .sub{margin:8px auto 0;text-align:center;font-size:10px;color:var(--dim)}
+</style>
+</head>
+
+<body>
+<header class="top"><div class="wrap">
+  <div class="logo">동네<b>옥션</b></div>
+  <div class="state" id="state"><i class="dot"></i><span id="stateTxt">접수 중</span></div>
+</div></header>
+
+<main>
+  <section class="head wrap">
+    <h1>나의 낙찰가는?</h1>
+    <p id="headSub">오늘 밤 · 신품 경매<br><b>전부 1,000원 START</b></p>
+
+    <div class="cdbar" id="cdbar">
+      <span class="lab" id="cdlab">제출 마감까지</span>
+      <span class="cd" id="cd">--<i>:</i>--<i>:</i>--</span>
+    </div>
+
+    <div class="nick">
+      <span class="lab">NICK</span>
+      <input id="nick" maxlength="12" autocomplete="off" spellcheck="false">
+      <span class="edit">수정 가능</span>
+    </div>
+  </section>
+
+  <section class="sec wrap">
+    <div class="sec-head">
+      <div><span class="en">TONIGHT</span><h2>오늘의 경매 물건</h2></div>
+      <span class="n" id="cnt">— LOTS</span>
+    </div>
+    <div class="rows" id="rows"></div>
+    <p class="note"><b>끌리는 상품만 골라도 OK.</b><br>
+       마감 전까지 언제든 바꿀 수 있어요.</p>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap">
+  <div class="logo">동네<b>옥션</b></div>
+  <p>모의경매 · 실제 상품 판매가 아닙니다.<br>
+     결제·배송은 발생하지 않습니다.</p>
+</div></footer>
+
+<div class="bar"><div class="wrap">
+  <button class="cta" id="submit">예상 최종가 제출하기</button>
+  <p class="sub" id="barSub">모의경매 · 실제 결제·배송 없음</p>
+</div></div>
+
+<script src="js/common.js"></script>
+<script>
+/* ══════ 상태 ══════ */
+let STATE = null;
+let CLOSED = false;
+const draft = {};          // { lot_no: amount }
+const saved = {};          // 서버에 반영된 값
+
+/* 닉네임 */
+const nickEl = document.getElementById("nick");
+nickEl.value = SESSION.nickname || makeNickname();
+setNickname(nickEl.value);
+nickEl.addEventListener("change", () => {
+  const v = nickEl.value.trim() || makeNickname();
+  nickEl.value = v;
+  setNickname(v);
+});
+
+/* ══════ 렌더 ══════ */
+function renderRows(lots){
+  const html = lots.map(l => `
+    <div class="row" data-lot="${l.lot_no}">
+      <div class="thumb">
+        <img src="${esc(CONFIG.IMG_DIR + l.image)}" alt="${esc(l.display_name)}"
+             loading="lazy" decoding="async" onerror="imgFail(this)">
+        <span class="lot">${pad(l.lot_no)}</span>
+      </div>
+      <div class="body">
+        <div class="nm">${esc(l.display_name)}</div>
+        <div class="field">
+          <span class="lab">예상 최종가</span>
+          <input type="text" inputmode="numeric" placeholder="금액 입력"
+                 data-lot="${l.lot_no}" aria-label="${esc(l.display_name)} 예상 최종가">
+          <span class="unit">${MONEY.currency === "KRW" ? "원" : MONEY.currency}</span>
+        </div>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("rows").innerHTML = html;
+  document.getElementById("cnt").textContent = lots.length + " LOTS";
+
+  document.getElementById("rows").addEventListener("input", e => {
+    const el = e.target.closest("input[data-lot]");
+    if(!el) return;
+    const raw = el.value.replace(/[^\d]/g, "");
+    el.value = raw ? Number(raw).toLocaleString("ko-KR") : "";
+    const no = el.dataset.lot;
+    draft[no] = raw ? Number(raw) : null;
+    el.closest(".row").classList.toggle("done", Boolean(draft[no]) && draft[no] === saved[no]);
+  });
+}
+
+function applyLock(){
+  document.querySelectorAll("input[data-lot]").forEach(el => el.disabled = CLOSED);
+  nickEl.disabled = CLOSED;
+  const btn = document.getElementById("submit");
+  btn.disabled = CLOSED;
+  if(CLOSED){
+    btn.textContent = (STATE && STATE.phase === "live") ? "LIVE 경매 참여하기" : "경매장 들어가기";
+    btn.disabled = false;
+    btn.onclick = () => location.href = "live.html" + location.search;
+    document.getElementById("barSub").textContent = "제출이 마감되었습니다";
+    document.getElementById("stateTxt").textContent = "제출 마감";
+  }
+}
+
+/* ══════ 카운트다운 ══════ */
+function tickLocal(){
+  if(!STATE || !STATE.predict_close_at) return;
+  const left = secondsUntil(STATE.predict_close_at);   // ← 서버 시간 오프셋 기준
+  if(left === null) return;
+  const cd = document.getElementById("cd");
+
+  if(left <= 0){
+    document.getElementById("cdbar").className = "cdbar closed";
+    cd.className = "cd";
+    cd.textContent = "마감";
+    document.getElementById("cdlab").textContent = "21:00 경매 시작";
+    if(!CLOSED){ CLOSED = true; applyLock(); }
+    return;
+  }
+  let s = Math.floor(left);
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  document.getElementById("cdbar").className = "cdbar";
+  cd.className = "cd";
+  cd.innerHTML = (d > 0 ? d + "<i>d</i> " : "")
+    + (h > 0 || d > 0 ? pad(h) + "<i>:</i>" : "")
+    + pad(m) + "<i>:</i>" + pad(s % 60);
+}
+
+/* ══════ 제출 ══════ */
+document.getElementById("submit").addEventListener("click", async () => {
+  if(CLOSED) return;
+  const entries = Object.keys(draft).filter(k => draft[k] > 0);
+  if(!entries.length) return toast("예상 최종가를 하나 이상 적어주세요", "err");
+
+  const btn = document.getElementById("submit");
+  btn.disabled = true;
+  btn.textContent = "제출 중…";
+
+  let ok = 0, fail = null;
+  for(const no of entries){
+    if(saved[no] === draft[no]) { ok++; continue; }
+    try{
+      const r = await apiPost("predict", { lot_no: Number(no), amount: draft[no] });
+      if(r.ok){ saved[no] = draft[no]; ok++; }
+      else fail = r.reason;
+    }catch(e){ fail = "network"; }
+  }
+
+  document.querySelectorAll(".row").forEach(row => {
+    const no = row.dataset.lot;
+    /* ⚠️ toggle 의 2번째 인자가 undefined 면 강제설정이 아니라 토글이 된다 → 반드시 boolean */
+    row.classList.toggle("done", Boolean(saved[no]) && saved[no] === draft[no]);
+  });
+
+  btn.disabled = false;
+  btn.textContent = "예상 최종가 제출하기";   /* 저장 상태는 상품의 ✓저장됨 이 담당 */
+
+  if(fail === "not_open"){ CLOSED = true; applyLock(); toast("제출이 마감되었습니다", "err"); }
+  else if(fail) toast(rejectMsg(fail), "err");
+  else toast(ok + "개 예상 최종가가 저장되었습니다", "ok");
+});
+
+/* ══════ 폴링 ══════ */
+const poller = createPoller(async () => {
+  const s = await apiGet();
+  if(!s.ok) return;
+  syncServerTime(s.server_time);          // ← 서버 시간 동기화
+  const first = !STATE;
+  STATE = s;
+  setMoney(s.currency, SESSION.locale);
+  setMinUnit(s.min_unit);
+
+  if(first) renderRows(s.lots);
+  /* LOT 수·시작가는 서버 데이터 기준 */
+  document.getElementById("headSub").innerHTML =
+    fmtTime(s.auction_start_at) + " · 신품 " + s.lots.length + "개<br><b>전부 " +
+    moneyPlain(s.start_price) + "원 START</b>";
+
+  const stEl = document.getElementById("state");
+  const stTxt = document.getElementById("stateTxt");
+
+  if(s.phase !== "predict"){
+    CLOSED = true;
+    applyLock();          /* 매 갱신마다 — standby→live 전환 시 CTA 문구도 따라간다 */
+  }
+
+  if(s.phase === "live"){
+    stTxt.textContent = "LIVE 진행 중";
+    stEl.classList.add("live");
+  }else if(s.phase === "standby"){
+    stTxt.textContent = "곧 시작";
+    stEl.classList.remove("live");
+  }else if(s.phase === "closing"){
+    stTxt.textContent = "제출 마감";
+    stEl.classList.remove("live");
+  }else if(s.phase === "ended"){
+    stTxt.textContent = "종료";
+    stEl.classList.remove("live");
+  }else{
+    stTxt.textContent = "접수 중";
+    stEl.classList.remove("live");
+  }
+});
+
+/* ══════ 시작 ══════ */
+(async function init(){
+  if(!CONFIG.API_URL){
+    document.getElementById("rows").innerHTML =
+      '<p class="note">API_URL 이 설정되지 않았습니다.<br>js/common.js 의 CONFIG.API_URL 에 Apps Script 웹앱 주소를 넣으세요.</p>';
+    document.getElementById("submit").disabled = true;
+    return;
+  }
+  trackView("predict_view");            // ← landing 은 index.html 에서만
+  poller.setInterval(CONFIG.POLL.idle);
+  poller.start();
+  setInterval(tickLocal, 1000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a09">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<title>LIVE 경매 — 동네옥션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#0a0a09;--panel:#131312;--panel2:#191918;
+  --text:#f4f4ef;--muted:#a09f98;--dim:#696963;--line:#292927;
+  --lime:#dfff20;--live:#ff4d4d;--sold:#ff7a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+a,button{font:inherit;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+button{border:0;background:none;cursor:pointer}
+input{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+.wrap{width:min(calc(100% - 32px),680px);margin:auto}
+.hidden{display:none!important}
+
+.top{position:sticky;top:0;z-index:40;background:rgba(10,10,9,.9);
+  backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.top .wrap{height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:15px;font-weight:800;letter-spacing:-.04em}
+.logo b{color:var(--lime)}
+.state{display:flex;gap:8px;align-items:center;font:800 11px Archivo,sans-serif;
+  letter-spacing:.1em;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.state.live{color:var(--live)}
+.state.live .dot{background:var(--live);box-shadow:0 0 14px rgba(255,77,77,.65);
+  animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.2}}
+
+.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:60px;background:var(--lime);color:#0a0a09;font-size:16px;font-weight:900;
+  letter-spacing:-.025em;border-radius:14px;
+  box-shadow:0 10px 28px rgba(223,255,32,.10);transition:filter .15s,box-shadow .15s}
+.cta:hover{filter:brightness(1.04)}
+.cta:active{transform:scale(.987)}
+.cta:disabled{background:var(--panel2);color:var(--dim);box-shadow:none;cursor:default}
+.cta.live{background:var(--live);color:#fff;box-shadow:0 10px 28px rgba(255,77,77,.14)}
+.cta.ghost{background:transparent;color:var(--text);
+  box-shadow:inset 0 0 0 1px var(--line)}
+
+.noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(135deg,#101010,#101010 10px,#151514 10px,#151514 20px);
+  color:var(--dim);font-size:11px;font-weight:700}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);
+  z-index:200;padding:13px 18px;border-radius:12px;background:#1d1d1b;
+  border:1px solid var(--line);color:var(--text);font-size:13px;font-weight:700;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  max-width:calc(100% - 40px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.ok{border-color:rgba(223,255,32,.4)}
+.toast.err{border-color:rgba(255,77,77,.45)}
+
+.foot{padding:40px 0 60px;border-top:1px solid var(--line);text-align:center}
+.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.85}
+
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+
+
+/* ── live 전용 ── */
+body{padding-bottom:calc(126px + env(safe-area-inset-bottom))}
+
+/* 진행 표시 */
+.prog{padding:10px 0 4px;display:flex;align-items:center;gap:5px;line-height:0}
+.prog i{flex:1 1 0;min-width:0;display:block;
+  height:4px;min-height:4px;max-height:4px;
+  padding:0;margin:0;border:0;font-size:0;line-height:0;
+  background:var(--line);border-radius:999px;align-self:center}
+.prog i.done{background:var(--sold)}
+.prog i.on{background:var(--live)}
+
+/* 현재 LOT */
+.stage{padding:16px 0 4px;text-align:center}
+.lotno{font:900 11px Archivo,sans-serif;letter-spacing:.2em;color:var(--live)}
+.photo{margin:14px auto 0;position:relative;aspect-ratio:1;max-width:280px;
+  border-radius:20px;overflow:hidden;background:#f7f7f4}
+.photo img{width:100%;height:100%;object-fit:contain;padding:7%}
+.name{margin-top:18px;font-size:clamp(20px,5.6vw,26px);font-weight:800;letter-spacing:-.05em}
+
+/* 현재가 */
+.price{margin-top:14px}
+.price .lab{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.price .val{margin-top:7px;font:900 clamp(38px,11vw,58px)/1 Archivo,sans-serif;
+  letter-spacing:-.055em;font-variant-numeric:tabular-nums;
+  transition:color .25s,transform .18s}
+.price .val.bump{color:var(--lime);transform:scale(1.045)}
+.price .holder{margin-top:10px;font-size:12px;color:var(--muted)}
+.price .holder b{color:var(--text);font-weight:800}
+.price .holder.mine b{color:var(--lime)}
+
+/* 타이머 */
+.clock{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.clock .t{font:700 clamp(34px,10vw,48px)/1 Archivo,sans-serif;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums}
+.clock .t.hot{color:var(--live);font-weight:900}
+.clock .lab{margin-top:9px;font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.clock .bids{margin-top:8px;font-size:12px;color:var(--dim)}
+
+/* 연장 배너 */
+.ext{margin-top:0;padding:0 12px;border-radius:12px;max-height:0;overflow:hidden;
+  background:rgba(255,77,77,.1);border:1px solid transparent;
+  color:#ffd7d5;font-size:12.5px;font-weight:800;text-align:center;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .25s,transform .25s,max-height .25s,padding .25s,margin-top .25s,border-color .25s}
+.ext.show{margin-top:14px;padding:12px;max-height:64px;
+  border-color:rgba(255,77,77,.4);opacity:1;transform:none}
+
+/* 대기/종료 */
+.panel{margin-top:22px;padding:30px 22px;border:1px solid var(--line);
+  border-radius:20px;text-align:center}
+.panel h2{font-size:22px;font-weight:800;letter-spacing:-.05em}
+.panel p{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.8}
+/* 다음 LOT 미리보기 */
+.nextlot{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+.nextlot .en{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.nextlot .th{margin:14px auto 0;width:150px;aspect-ratio:1;border-radius:18px;
+  overflow:hidden;background:#f7f7f4;position:relative}
+.nextlot .th img{width:100%;height:100%;object-fit:contain;padding:8%}
+.nextlot .nm{margin-top:14px;font-size:18px;font-weight:800;letter-spacing:-.045em}
+.nextlot .st{margin-top:6px;font:900 15px Archivo,sans-serif;color:var(--lime);letter-spacing:-.03em}
+.nextlot .st small{font:700 10px Pretendard,sans-serif;color:var(--dim);margin-left:5px}
+/* 시작 카운트다운 */
+.startcd{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+.startcd .t{font:700 clamp(34px,10vw,46px)/1 Archivo,sans-serif;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums}
+.startcd .t i{font-style:normal;color:var(--dim);font-weight:500}
+.startcd .lab{margin-top:10px;font:800 9.5px Archivo,sans-serif;
+  letter-spacing:.2em;color:var(--dim)}
+.panel .go{display:inline-flex;margin-top:22px;padding:12px 20px;border-radius:999px;
+  background:var(--panel2);font-size:13px;font-weight:800;letter-spacing:-.02em}
+
+/* 결과 목록 */
+.sec{padding:28px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:16px}
+.sec-head .en{display:block;margin-bottom:6px;font:800 10px Archivo,sans-serif;
+  letter-spacing:.2em;color:var(--dim)}
+.sec-head h2{font-size:20px;letter-spacing:-.05em;font-weight:800}
+.sec-head .n{font:800 11px Archivo,sans-serif;color:var(--dim);letter-spacing:.08em}
+.dones{display:flex;flex-direction:column;gap:10px}
+.done{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;
+  padding:11px;background:var(--panel);border-radius:14px}
+.done .th{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#eeeee9}
+.done .th img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.35) brightness(.85)}
+.done .nm{font-size:13.5px;font-weight:800;letter-spacing:-.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.done .nm span{display:block;margin-top:3px;font-size:10.5px;color:var(--dim);font-weight:500}
+.done .mine{color:var(--lime);font-weight:800}
+
+/* 회차 종료 후 내 성과 요약 */
+.myresult{margin-top:22px;padding:26px 22px;border:1px solid var(--line);
+  border-radius:18px;text-align:center}
+.myresult .en{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.myresult .score{margin-top:14px;font:900 clamp(34px,9vw,44px)/1 Archivo,sans-serif;
+  letter-spacing:-.05em}
+.myresult .score b{color:var(--lime)}
+.myresult .score small{font:800 15px Pretendard,sans-serif;color:var(--muted);margin-left:7px}
+.myresult .tier{margin-top:14px;display:inline-block;padding:7px 14px;
+  border-radius:999px;border:1px solid var(--line);
+  font:900 12px Archivo,sans-serif;letter-spacing:.14em;color:var(--muted)}
+.myresult .tier.on{border-color:rgba(223,255,32,.45);color:var(--lime)}
+.myresult p{margin-top:15px;color:var(--muted);font-size:12.5px;line-height:1.8}
+.done .p{font:900 18px Archivo,sans-serif;color:var(--sold);letter-spacing:-.04em;white-space:nowrap}
+.done .p span{display:block;text-align:right;font-size:10.5px;font-weight:500;color:var(--dim);letter-spacing:-.02em;margin-bottom:2px}
+
+/* 입찰 바 */
+.bidbar{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(10,10,9,.96);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+.bidlab{margin-bottom:6px;font:800 9.5px Archivo,sans-serif;
+  letter-spacing:.18em;color:var(--dim)}
+.quickrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.qlab{flex:0 0 auto;font-size:10.5px;font-weight:700;color:var(--dim);white-space:nowrap}
+.quick{flex:1;min-width:0;display:flex;gap:6px}
+.quick button{flex:1;min-width:0;min-height:34px;border-radius:9px;background:transparent;
+  font:800 12px Archivo,sans-serif;letter-spacing:-.03em;color:var(--muted);
+  border:1px solid var(--line);transition:background .15s,color .15s,border-color .15s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quick button:active,.quick button.on{background:var(--panel2);color:var(--text);
+  border-color:#3a3a36}
+.quick button:disabled{opacity:.3}
+.custom{display:flex;gap:8px}
+.custom .box{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:0 16px;
+  min-height:58px;border-radius:13px;background:var(--panel2);
+  border:1px solid var(--line);transition:border-color .18s}
+.custom .box:focus-within{border-color:rgba(223,255,32,.5)}
+.custom input{flex:1;min-width:0;background:none;border:0;
+  font:900 23px Archivo,sans-serif;letter-spacing:-.04em;text-align:left;
+  font-variant-numeric:tabular-nums}
+.custom input:focus{outline:none}
+.custom input::placeholder{color:#5c5c56;font:800 15px Pretendard,sans-serif;letter-spacing:-.02em}
+.custom .u{flex:0 0 auto;margin-left:auto;font-size:13px;font-weight:800;color:var(--muted)}
+.custom .cta{width:auto;flex:0 0 auto;min-width:88px;padding:0 20px;
+  min-height:58px;font-size:15px}
+.bidnote{margin-top:7px;text-align:center;font-size:10px;color:var(--dim)}
+</style>
+</head>
+
+<body>
+<header class="top"><div class="wrap">
+  <div class="logo">동네<b>옥션</b></div>
+  <div class="state" id="state"><i class="dot"></i><span id="stateTxt">연결 중</span></div>
+</div></header>
+
+<main>
+  <div class="wrap"><div class="prog" id="prog"></div></div>
+
+  <!-- 진행 중 -->
+  <section class="stage wrap hidden" id="stage">
+    <div class="lotno" id="lotno">LOT 01</div>
+    <div class="photo"><img id="photo" src="" alt="" onerror="imgFail(this)"></div>
+    <div class="name" id="name">—</div>
+
+    <div class="price">
+      <div class="lab">CURRENT</div>
+      <div class="val" id="price">—</div>
+      <div class="holder" id="holder"></div>
+    </div>
+
+    <div class="clock">
+      <div class="t" id="clock">--</div>
+      <div class="lab">SECONDS LEFT</div>
+      <div class="bids" id="bids"></div>
+    </div>
+
+    <div class="ext" id="ext">막판 입찰 · 30초 연장되었습니다</div>
+  </section>
+
+  <!-- 대기 / 종료 -->
+  <section class="wrap hidden" id="wait">
+    <div class="panel">
+      <h2 id="waitTitle">곧 시작합니다</h2>
+      <p id="waitDesc">잠시만 기다려주세요.</p>
+
+      <div class="nextlot hidden" id="nextlot">
+        <div class="en">FIRST LOT</div>
+        <div class="th"><img id="nextImg" src="" alt="" onerror="imgFail(this)"></div>
+        <div class="nm" id="nextName">—</div>
+        <div class="st" id="nextStart"></div>
+      </div>
+
+      <div class="startcd hidden" id="startcd">
+        <div class="t" id="startT">--<i>:</i>--<i>:</i>--</div>
+        <div class="lab" id="startLab">START</div>
+      </div>
+
+      <a class="go hidden" id="goPredict" href="predict.html">예상 최종가 적으러 가기 →</a>
+    </div>
+
+    <!-- 회차 종료 후에만 -->
+    <div class="myresult hidden" id="myresult">
+      <div class="en">MY RESULT</div>
+      <div class="score" id="myScore">— <small>최고가</small></div>
+      <div class="tier" id="myTier">—</div>
+      <p id="myDesc"></p>
+    </div>
+  </section>
+
+  <!-- 종료된 LOT -->
+  <section class="sec wrap hidden" id="doneSec">
+    <div class="sec-head">
+      <div><span class="en">CLOSED</span><h2>경매 종료</h2></div>
+      <span class="n" id="doneN">—</span>
+    </div>
+    <div class="dones" id="dones"></div>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap">
+  <div class="logo">동네<b>옥션</b></div>
+  <p>모의경매 · 실제 상품 판매가 아닙니다.<br>
+     결제·배송은 발생하지 않습니다.</p>
+</div></footer>
+
+<!-- 입찰 바 -->
+<div class="bidbar hidden" id="bidbar"><div class="wrap">
+  <div class="bidlab">입찰 금액</div>
+  <div class="custom">
+    <div class="box">
+      <input id="amt" type="text" inputmode="numeric" placeholder="원하는 금액 입력" aria-label="입찰 금액">
+      <span class="u" id="unit">원</span>
+    </div>
+    <button class="cta" id="bid">입찰</button>
+  </div>
+  <div class="quickrow">
+    <span class="qlab">빠른 선택</span>
+    <div class="quick" id="quick"></div>
+  </div>
+  <p class="bidnote" id="bidnote">현재가보다 높은 금액을 직접 입력하세요 · 1,000원 단위</p>
+</div></div>
+
+<script src="js/common.js"></script>
+<script>
+let STATE = null;
+let LOT = null;          // 현재 진행 LOT
+let lastPrice = 0;
+/* 연장 알림 — 모든 창이 동일하게 close_at 변화로만 판정한다.
+   close_at 은 서버가 실제로 연장했을 때만 커지므로 그 자체가 연장 이벤트 ID 역할을 한다.
+   LOT 이 바뀌면 추적을 초기화하고, 그 LOT 을 처음 본 시점의 값은 기준선으로만 쓴다
+   (이미 연장된 상태로 진입한 사람에게 지난 연장을 뒤늦게 띄우지 않기 위해). */
+let extTrack = { lot: null, closeAt: null };
+let sending = false;
+const wonLots = new Set();   /* 이미 알린 LOT */
+
+/* 등급 — LOT 개수가 5개든 10개든 같은 의미가 되도록 "비율" 기준.
+   입찰 횟수가 아니라 최종 최고가 LOT 수로 산정한다 (연타 유도 방지). */
+function tierOf(win, total){
+  if(!total || win <= 0) return {
+    name:"WATCHER", on:false,
+    desc:"오늘은 지켜보셨네요. 다음 회차엔 한 번 불러보세요."
+  };
+  const r = win / total;
+  const name = r >= .81 ? "SWEEP"
+             : r >= .61 ? "ACE"
+             : r >= .41 ? "HUNTER"
+             : r >= .21 ? "BIDDER"
+             :            "ROOKIE";
+  const tail = win === total ? " 오늘의 올킬입니다."
+             : r >= .61      ? " 거의 다 잡으셨습니다."
+             : r >= .41      ? " 감이 좋으시네요."
+             : "";
+  return { name, on:true,
+    desc:`${total}개 중 ${win}개에서 최종 최고가.` + tail };
+}
+
+/** 이 LOT 의 최종 최고가가 나인가 — 판정은 서버가 한다.
+ *  (남의 session_id 는 응답에 포함되지 않는다) */
+function isMine(l){
+  return l && l.is_mine === true;
+}
+
+const poller = createPoller(refresh);
+
+/* ══════ 폴링 ══════ */
+async function refresh(){
+  const s = await apiGet();
+  if(!s.ok) return;
+  syncServerTime(s.server_time);
+  setMoney(s.currency, SESSION.locale);
+  setMinUnit(s.min_unit);
+  STATE = s;
+  render(s);
+}
+
+function render(s){
+  const stEl = $("#state"), stTxt = $("#stateTxt");
+  const cur = s.current_lot;
+
+  /* 진행 막대 */
+  $("#prog").innerHTML = s.lots.map(l =>
+    `<i class="${l.state === "closed" ? "done" : (l.state === "onair" ? "on" : "")}"></i>`
+  ).join("");
+
+  /* 상태 라벨 */
+  if(s.phase === "live"){
+    stTxt.textContent = "LIVE"; stEl.classList.add("live");
+    poller.setInterval(CONFIG.POLL.live);
+  }else{
+    stEl.classList.remove("live");
+    stTxt.textContent = { predict:"접수 중", closing:"곧 시작", standby:"대기 중", ended:"종료" }[s.phase] || "";
+    poller.setInterval(CONFIG.POLL.idle);
+  }
+
+  /* 진행 화면 */
+  if(cur){
+    LOT = cur;
+    $("#stage").classList.remove("hidden");
+    $("#wait").classList.add("hidden");
+    $("#bidbar").classList.remove("hidden");
+
+    $("#lotno").textContent = "LOT " + pad(cur.lot_no);
+    $("#name").textContent  = cur.display_name;
+
+    const img = $("#photo");
+    const src = CONFIG.IMG_DIR + cur.image;
+    if(img.getAttribute("src") !== src){
+      img.style.display = "";
+      const old = img.parentElement.querySelector(".noimg");
+      if(old) old.remove();
+      img.src = src; img.alt = cur.display_name;
+    }
+
+    /* 가격 — 올랐으면 강조 */
+    const p = $("#price");
+    p.textContent = money(cur.current_price);
+    if(cur.current_price > lastPrice && lastPrice > 0){
+      p.classList.add("bump");
+      setTimeout(() => p.classList.remove("bump"), 450);
+    }
+    lastPrice = cur.current_price;
+
+    const h = $("#holder");
+    if(cur.current_holder){
+      const mine = cur.current_holder === SESSION.nickname;
+      h.className = "holder" + (mine ? " mine" : "");
+      h.innerHTML = mine ? "<b>내가 최고가입니다</b>" : "<b>" + esc(cur.current_holder) + "</b> 님이 최고가";
+    }else{
+      h.className = "holder"; h.textContent = "아직 입찰이 없습니다";
+    }
+
+    $("#bids").textContent = cur.bid_count + "회 입찰";
+
+    /* 연장 감지 — 입찰한 사람이든 보고만 있는 사람이든 같은 경로로 정확히 1회 */
+    if(extTrack.lot !== cur.lot_no){
+      extTrack = { lot: cur.lot_no, closeAt: cur.close_at };      // 기준선만 잡고 표시 안 함
+    }else if(cur.close_at && extTrack.closeAt &&
+             new Date(cur.close_at) > new Date(extTrack.closeAt)){
+      extTrack.closeAt = cur.close_at;                            // 같은 연장 반복 표시 방지
+      showExtended();
+    }
+
+    renderQuick(cur.current_price);
+    $("#bidnote").textContent =
+      "현재가보다 높은 금액을 직접 입력하세요 · " + moneyPlain(MIN_UNIT) + "원 단위";
+  }else{
+    LOT = null;
+    $("#stage").classList.add("hidden");
+    $("#bidbar").classList.add("hidden");
+    $("#wait").classList.remove("hidden");
+
+    const t = $("#waitTitle"), d = $("#waitDesc");
+    const nx = s.lots.filter(l => l.state === "wait").sort((a,b) => a.lot_no - b.lot_no)[0];
+    const ended = s.phase === "ended";
+    /* 하나라도 끝났으면 = LOT 사이 대기 (최초 시작 전이 아님) */
+    const between = s.lots.some(l => l.state === "closed");
+
+    /* 다음 LOT 미리보기 */
+    if(nx && !ended){
+      $("#nextlot").classList.remove("hidden");
+      $("#nextlot").querySelector(".en").textContent =
+        between ? "NEXT LOT " + pad(nx.lot_no) : "FIRST LOT";
+      const im = $("#nextImg"), src2 = CONFIG.IMG_DIR + nx.image;
+      if(im.getAttribute("src") !== src2){
+        im.style.display = "";
+        const o = im.parentElement.querySelector(".noimg"); if(o) o.remove();
+        im.src = src2; im.alt = nx.display_name;
+      }
+      $("#nextName").textContent  = nx.display_name;
+      $("#nextStart").innerHTML   = moneyPlain(s.start_price) + "원<small>START</small>";
+    }else{
+      $("#nextlot").classList.add("hidden");
+    }
+
+    /* 시작 카운트다운 — 최초 대기(예측/마감 단계)에서만 노출 */
+    const showCd = !ended && !between && s.phase !== "standby";
+    $("#startcd").classList.toggle("hidden", !showCd);
+    if(showCd) $("#startLab").textContent = fmtTime(s.auction_start_at) + " START";
+    $("#goPredict").classList.toggle("hidden", s.phase !== "predict");
+
+    if(ended){
+      t.textContent = "오늘 경매가 끝났습니다";
+      d.innerHTML = "결과와 예측왕은 잠시 후 발표됩니다.<br>내일 밤 9시에 다시 만나요.";
+    }else if(between){
+      /* LOT 사이 — 다음 상품으로 붙잡아둔다 */
+      t.textContent = "다음 상품 준비 중";
+      d.textContent = "잠시 후 시작합니다.";
+    }else if(s.phase === "standby"){
+      t.textContent = "곧 시작합니다";
+      d.textContent = "첫 상품이 올라오는 중입니다.";
+    }else{
+      t.textContent = fmtTime(s.auction_start_at) + " 시작";
+      d.innerHTML = "전부 1,000원에서 출발합니다.<br>얼마까지 갈지는 들어온 사람들이 정합니다.";
+    }
+  }
+
+  /* 내 성과 — 회차가 끝났을 때만 노출 (LIVE 중엔 HUD 처럼 보이지 않게) */
+  const allLots = s.lots.length;
+  const myWins  = s.lots.filter(l => l.state === "closed" && isMine(l)).length;
+  const mr = $("#myresult");
+  if(s.phase === "ended" && allLots){
+    mr.classList.remove("hidden");
+    $("#myScore").innerHTML = `<b>${myWins}</b> / ${allLots} <small>최고가</small>`;
+    const t = tierOf(myWins, allLots);
+    const tierEl = $("#myTier");
+    tierEl.textContent = t.name;
+    tierEl.className = "tier" + (t.on ? " on" : "");
+    $("#myDesc").textContent = t.desc;
+  }else{
+    mr.classList.add("hidden");
+  }
+
+  /* 종료된 LOT */
+  const done = s.lots.filter(l => String(l.state).toLowerCase() === "closed" && l.final_price > 0)
+                     .sort((a,b) => b.lot_no - a.lot_no);
+
+  /* 내가 최고가로 종료된 LOT 이 새로 생기면 알린다 */
+  done.forEach(l => {
+    if(isMine(l) && !wonLots.has(l.lot_no)){
+      wonLots.add(l.lot_no);
+      toast("LOT " + pad(l.lot_no) + " 최고가 확정 · " + money(l.final_price), "ok");
+    }
+  });
+  if(done.length){
+    $("#doneSec").classList.remove("hidden");
+    /* LOT 개수는 s.lots.length 가 유일 기준 — 회차마다 5개/10개 가변.
+       state 는 서버가 소문자로 내려주지만 대소문자 방어를 걸어둔다. */
+    const total  = s.lots.length;
+    const closed = s.lots.filter(l => String(l.state).toLowerCase() === "closed").length;
+    $("#doneN").textContent = closed + " / " + total + " 종료";
+    $("#dones").innerHTML = done.map(l => `
+      <div class="done">
+        <div class="th"><img src="${esc(CONFIG.IMG_DIR + l.image)}" alt="${esc(l.display_name)}"
+             loading="lazy" onerror="imgFail(this)"></div>
+        <div class="nm">${esc(l.display_name)}<span>LOT ${pad(l.lot_no)}${
+          isMine(l) ? ' · <b class="mine">✓ 내가 최고가</b>' : ''}</span></div>
+        <div class="p"><span>최종가</span>${money(l.final_price)}</div>
+      </div>`).join("");
+  }else{
+    $("#doneSec").classList.add("hidden");
+  }
+}
+
+/* ══════ 빠른 입찰 버튼 ══════ */
+/* 버튼에 "실제로 입찰하게 될 금액"을 표시한다 (+1,000 이 아니라 7,000원) */
+function showExtended(){
+  const e = $("#ext");
+  e.classList.add("show");
+  clearTimeout(e._t);
+  e._t = setTimeout(() => e.classList.remove("show"), 3200);
+}
+
+function renderQuick(cur){
+  const u = MIN_UNIT;
+  const vals = [cur + u, cur + u * 5, cur + u * 10];
+  $("#quick").innerHTML = vals.map(v =>
+    `<button data-set="${v}">${money(v)}</button>`
+  ).join("");
+  $("#unit").textContent = MONEY.currency === "KRW" ? "원" : MONEY.currency;
+}
+
+/* ⚠️ 즉시 입찰하지 않는다. 입력창에 금액만 채우고 최종 확정은 [입찰] 버튼으로. */
+$("#quick").addEventListener("click", e => {
+  const b = e.target.closest("button[data-set]");
+  if(!b || !LOT) return;
+  const v = Number(b.dataset.set);
+  $("#amt").value = v.toLocaleString("ko-KR");
+  $$(".quick button").forEach(x => x.classList.toggle("on", x === b));
+  $("#amt").focus();
+});
+
+/* ══════ 직접 입력 ══════ */
+$("#amt").addEventListener("input", e => {
+  const raw = e.target.value.replace(/[^\d]/g, "");
+  e.target.value = raw ? Number(raw).toLocaleString("ko-KR") : "";
+  $$(".quick button").forEach(x => x.classList.remove("on"));
+});
+$("#bid").addEventListener("click", () => {
+  const raw = $("#amt").value.replace(/[^\d]/g, "");
+  if(!raw) return toast("금액을 입력해주세요", "err");
+  sendBid(Number(raw));
+});
+
+/* ══════ 입찰 전송 ══════ */
+async function sendBid(amount){
+  if(sending || !LOT) return;
+
+  /* 로컬 선검증 — 서버 왕복 아끼기 */
+  if(amount % MIN_UNIT !== 0) return toast(rejectMsg("bad_unit"), "err");
+  if(amount <= LOT.current_price) return toast(rejectMsg("below_current"), "err");
+
+  sending = true;
+  const btn = $("#bid");
+  btn.disabled = true;
+  $$(".quick button").forEach(b => b.disabled = true);
+
+  try{
+    const r = await apiPost("bid", { lot_no: LOT.lot_no, amount: amount });
+    if(r.ok){
+      $("#amt").value = "";
+      $$(".quick button").forEach(x => x.classList.remove("on"));
+      toast(money(amount) + " 입찰 완료", "ok");
+      /* r.extended 로 즉시 띄우지 않는다 — 바로 아래 refresh() 가
+         다른 창과 똑같은 close_at 경로로 처리해 중복/불일치를 없앤다 */
+      await refresh();
+    }else{
+      toast(rejectMsg(r.reason), "err");
+      await refresh();
+    }
+  }catch(err){
+    toast("연결이 불안정합니다. 다시 시도해주세요", "err");
+  }finally{
+    sending = false;
+    btn.disabled = false;
+    $$(".quick button").forEach(b => b.disabled = false);
+  }
+}
+
+/* ══════ 로컬 타이머 (서버 시간 기준) ══════ */
+setInterval(() => {
+  /* 대기 화면 — 21:00 까지 */
+  if(!LOT && STATE && STATE.auction_start_at){
+    const l = secondsUntil(STATE.auction_start_at);
+    const el = $("#startT");
+    if(l !== null && el){
+      let x = Math.max(0, Math.floor(l));
+      const dd = Math.floor(x / 86400); x %= 86400;
+      const hh = Math.floor(x / 3600);  x %= 3600;
+      el.innerHTML = (dd > 0 ? dd + "<i>d</i> " : "")
+        + pad(hh) + "<i>:</i>" + pad(Math.floor(x / 60)) + "<i>:</i>" + pad(x % 60);
+    }
+  }
+  if(!LOT || !LOT.close_at) return;
+  const left = secondsUntil(LOT.close_at);
+  if(left === null) return;
+  const c = $("#clock");
+  const s = Math.max(0, Math.ceil(left));
+
+  c.textContent = s > 0 ? s : "마감";
+  c.className = "t" + (s <= 10 && s > 0 ? " hot" : "");
+
+  /* 막판엔 폴링을 조인다 */
+  poller.setInterval(s <= 30 ? CONFIG.POLL.hot : CONFIG.POLL.live);
+}, 250);
+
+/* ══════ 시작 ══════ */
+(function init(){
+  if(!CONFIG.API_URL){
+    $("#wait").classList.remove("hidden");
+    $("#waitTitle").textContent = "API_URL 미설정";
+    $("#waitDesc").textContent = "js/common.js 의 CONFIG.API_URL 을 확인하세요.";
+    return;
+  }
+  if(!SESSION.nickname) setNickname(makeNickname());
+  trackView("view_live");
+  poller.setInterval(CONFIG.POLL.live);
+  poller.start();
+})();
+</script>
+</body>
+</html>

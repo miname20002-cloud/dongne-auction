@@ -1,0 +1,6 @@
+﻿round_id,market,currency,lot_no,display_name,image,order_no,model,invalid_above,start_price,min_unit,state,current_price,current_holder,bid_count,close_at,final_price
+KR-R1,KR,KRW,1,Nintendo Switch OLED,nintendo-switch-oled.png,1,Nintendo Switch OLED 화이트 국내정식,300000,1000,1000,wait,1000,,0,,
+KR-R1,KR,KRW,2,AirPods 4 ANC,earbuds.svg,2,Apple AirPods 4 ANC / MXP93KH/A,210000,1000,1000,wait,1000,,0,,
+KR-R1,KR,KRW,3,LEGO 인기 세트,lego.svg,3,SKU 확정 필요,,1000,1000,wait,1000,,0,,
+KR-R1,KR,KRW,4,Helinox Chair One,chair.svg,4,Helinox Chair One / 10001R1 블랙,115000,1000,1000,wait,1000,,0,,
+KR-R1,KR,KRW,5,Stanley Quencher H2.0 1.18L,tumbler.svg,5,Stanley Quencher H2.0 FlowState 1.18L / 10-10824,35000,1000,1000,wait,1000,,0,,
