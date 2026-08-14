@@ -32,7 +32,7 @@ foreach ($d in @("docs","docs\data","docs\archive","web","web\js","web\images"))
 
 # ---------- move rules ----------
 $Moves = New-Object System.Collections.Specialized.OrderedDictionary
-$Moves.Add("index_v15.html",  "web\index.html")
+$Moves.Add("index.html",      "web\index.html")
 $Moves.Add("predict.html",    "web\predict.html")
 $Moves.Add("live.html",       "web\live.html")
 $Moves.Add("result.html",     "web\result.html")
