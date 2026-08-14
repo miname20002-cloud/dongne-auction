@@ -70,28 +70,55 @@ final   : { ok, status:"final", round_id, server_time,
 
 ---
 
-## 🔴 최우선 미해결 — `has_bid` → WATCHER
+## 🔴 내일 첫 행동
 
-**증상**: `won_lots=4/5`인데 등급이 `WATCHER`.
-`won_lots`는 맞으므로 세션 판정은 정상, `events` 조회만 실패.
+### 1) 게이지가 안 움직인다 — `lot_duration` 확인부터
 
-**유력 가설**: `logEvent_`만 **헤더명이 아니라 배열 순서로** append합니다.
-`handlePredict_`는 `head.map(h => switch(h))`로 헤더 매핑을 씁니다 — 예측왕이 정상이고 `has_bid`만 깨진 것과 일치.
-`selfTest`는 열 **존재**만 검사하고 **순서**는 안 봅니다.
-
-**다음 첫 행동**
+LIVE 원형 타이머의 원호가 줄지 않고 100% 로 고정된다.
+`STATE.lot_duration` 이 undefined 일 때의 폴백 동작이므로 **표시만의 문제**다
+(숫자·색 전환·30초 연장은 정상 확인됨).
 
 ```
-1  debugResultSession() 을 편집기에 붙여넣고 실행   ← resetAll 前에
-2  로그의 "처음 0 이 되는 지점" 확인
-3  최소 diff 로 수정
+...exec?action=state&market=KR&session=test   →   Ctrl+F "lot_duration"
+있으면  → 브라우저 캐시. Ctrl+Shift+R
+없으면  → 재배포 (배포 관리 → 연필 → 새 버전)
 ```
 
-진단 함수는 이 저장소 `docs\debug_hasbid.gs`(또는 이전 대화 산출물)에 있습니다. 읽기 전용.
+확인은 **LOT 을 연 직후 120초 부근**에서. 20초대는 17% 라 눈으로 판별이 안 된다.
 
-**금지** — `won_lots>0`이면 등급을 강제하거나, 프론트에서 `has_bid`를 추론하거나, 닉네임으로 폴백. WATCHER/ROOKIE를 가르는 건 `has_bid`뿐이고, 우회하면 `events`가 깨진 사실이 영구히 숨겨집니다. 그 시트가 Phase 0의 유일한 측정 데이터입니다.
+### 2) A 케이스 — 마지막 관문
+
+`has_bid` 원인은 규명·수정 완료. 남은 검증은 하나다.
+
+| 세션 | 조건 | 기대 | 상태 |
+|---|---|---|---|
+| A | 입찰함, 최고가 0개 | **ROOKIE** | ❓ 미확인 |
+| B | 입찰함, 최고가 n개 | BIDDER~SWEEP | ❓ 미확인 |
+| C | 구경만 | WATCHER | ✅ 확인 |
+
+**A 가 ROOKIE 로 뜨면 `has_bid` 건 완전 종료.**
+`won>0` 우회가 가려주던 게 정확히 이 구간이라, B 만 맞아서는 닫은 게 아니다.
+
+세션 분리: 일반창 / 시크릿창 / 다른 브라우저. 전부 `github.io` 에서 할 것
+(`file://` 과 `github.io` 는 오리진이 달라 `da_sid` 가 별개다).
 
 ---
+
+## has_bid 원인 (규명 완료 · 기록용)
+
+`events` 시트 **A열에 헤더 이름이 `1` 인 빈 열**이 있었다.
+옛 `logEvent_` 는 위치 기반 `appendRow([...])` 라 전 컬럼이 한 칸씩 밀렸다
+— `session_id` 열을 읽으면 닉네임이 나왔다.
+`selfTest` 는 열 **존재**만 검사하므로 이걸 통과시킨다.
+
+**수정**
+- `logEvent_` → 헤더명 매핑 + 헤더 1행만 읽기 (`readTable_` 전체 스캔 제거)
+- `buildResult_` 의 `won > 0 ||` 우회 제거
+
+**검증** — `debugResultSession()` 재실행 시 `④ has_bid : true`, `▶ 처음 0 이 되는 지점 : 없음`
+
+⚠️ **A열 `1` 은 아직 지우지 않았다.** 옛 186행이 어떻게 밀렸는지 확인할 증거라
+리허설이 끝난 뒤 정리한다. 헤더 매핑이 들어갔으므로 있어도 정상 동작한다.
 
 ## 오늘 완료한 것
 
@@ -126,8 +153,8 @@ final   : { ok, status:"final", round_id, server_time,
 ## 미완료
 
 ### 실전 리허설 (다음 세션 본론)
-- [ ] `debugResultSession()` → `has_bid` 수정
-- [ ] 이미지 5개 로드 — **`Helinox.jpg` / `Stanley.jpg` 대소문자** (Pages는 구분)
+- [x] ~~`debugResultSession()` → `has_bid` 원인 규명·수정~~ (A 케이스 검증만 남음)
+- [x] ~~이미지 5개 로드 — 대소문자 문제 없음 (Pages 확인 완료)~~
 - [ ] 타이머 게이지 실동작 — 120→90→30 감소 / 30초 빨강 / 연장 시 25% 재충전
 - [ ] **모바일 실기기** — Pages 배포로 이제 가능
 - [ ] LOT 5 완주 → `phase=ended` → `result.html` 진입
@@ -167,6 +194,7 @@ final   : { ok, status:"final", round_id, server_time,
 | 고쳤는데 콘솔 오류가 그대로 | 브라우저 캐시. `?v=커밋해시` 또는 `Ctrl+Shift+R` |
 | 재배포 직후 POST 404 | 일시적. 몇 초 뒤 정상 |
 | `events` 값이 엉뚱한 열에 | `logEvent_`만 배열 순서로 append. 다른 곳은 헤더명 기준 |
+| 두 창의 상태가 어긋남 | 뒤에 가려진 창은 `document.hidden` 으로 폴링 정지. **반드시 나란히, 겹치지 않게** |
 
 기존 함정(파일이 창을 안 넘어감 / PowerShell 한글 깨짐 / `node --check` 필수 / 타임존 누락 / 이미지 대소문자)은 전부 유효.
 
