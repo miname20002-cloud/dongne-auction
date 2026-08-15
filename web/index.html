@@ -34,7 +34,7 @@ img{display:block;max-width:100%}
 .wrap{width:min(calc(100% - 32px),680px);margin:auto}
 .hidden{display:none!important}
 /* 한국어 줄바꿈 — 단어 중간에서 끊기지 않게 */
-h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
+h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-wrap:anywhere}
 
 /* top */
 .top{position:sticky;top:0;z-index:40;background:rgba(10,10,9,.9);
@@ -50,9 +50,9 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 @keyframes pulse{50%{opacity:.2}}
 
 /* ── HERO ── */
-.hero{padding:30px 0 34px;text-align:center}
-.kicker{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;
-  padding:6px 12px;border-radius:999px;border:1px solid currentColor;color:var(--dim);
+.hero{padding:21px 0 24px;text-align:center}
+.kicker{display:inline-flex;align-items:center;gap:7px;margin-bottom:11px;
+  padding:5px 11px;border-radius:999px;border:1px solid currentColor;color:var(--dim);
   font:800 10px Archivo,sans-serif;letter-spacing:.18em}
 .kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .kicker.live{color:var(--live)}
@@ -60,7 +60,7 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .hero h1{font-size:clamp(25px,7vw,36px);line-height:1.18;
   letter-spacing:-.055em;font-weight:800}
 .hero h1 em{font-style:normal;color:var(--lime)}
-.hero .big{margin-top:14px;color:var(--text);
+.hero .big{margin-top:10px;color:var(--text);
   font:800 clamp(46px,13.5vw,72px)/.92 Archivo,sans-serif;
   letter-spacing:-.065em;font-variant-numeric:tabular-nums}
 .hero .big .cur{font-family:"Pretendard Variable",Pretendard,sans-serif;
@@ -69,15 +69,15 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .hero .big .start{font-family:Archivo,sans-serif;font-weight:900;
   font-size:.25em;letter-spacing:.10em;color:var(--lime);
   vertical-align:.9em;margin-left:.22em}
-.hero .sub{margin-top:14px;color:var(--muted);font-size:13.5px;letter-spacing:-.02em}
-.hero .cta{margin-top:22px}
-.disclose{margin-top:13px;text-align:center;font-size:11.5px;font-weight:700;
-  color:var(--muted);line-height:1.75}
-.fine{margin-top:11px;text-align:center;font-size:11px;color:var(--dim);line-height:1.7}
+.hero .sub{margin-top:9px;color:var(--muted);font-size:13.5px;letter-spacing:-.02em}
+.hero .cta{margin-top:15px}
+.disclose{margin-top:9px;text-align:center;font-size:11.5px;font-weight:700;
+  color:var(--muted);line-height:1.6}
+.fine{margin-top:8px;text-align:center;font-size:11px;color:var(--dim);line-height:1.55}
 .fine b{color:var(--muted);font-weight:800}
 
 /* cta */
-.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:58px;
+.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:54px;
   background:var(--lime);color:#0a0a09;font-size:16px;font-weight:900;
   letter-spacing:-.025em;border-radius:14px;
   box-shadow:0 10px 30px rgba(223,255,32,.13);
@@ -87,22 +87,31 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .cta.live{background:var(--live);color:#fff;box-shadow:0 10px 30px rgba(255,77,77,.16)}
 
 /* section */
-.sec{padding:40px 0;border-top:1px solid var(--line)}
-.sec-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:20px}
-.sec-head .en{display:block;margin-bottom:7px;font:800 10px Archivo,sans-serif;
+.sec{padding:22px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sec-head .en{display:block;margin-bottom:5px;font:800 10px Archivo,sans-serif;
   letter-spacing:.2em;color:var(--dim)}
-.sec-head h2{font-size:21px;letter-spacing:-.05em;font-weight:800;line-height:1.25}
+.sec-head h2{font-size:18px;letter-spacing:-.05em;font-weight:800;line-height:1.25}
 .count{flex:0 0 auto;font-size:11.5px;font-weight:800;color:var(--dim);letter-spacing:-.02em}
 
-/* ── TODAY'S DROP ── */
-.drop{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px}
-.card{min-width:0;display:flex;flex-direction:column}
-.card.feat{order:-1;grid-column:1 / -1}
-.card.feat .card-media{aspect-ratio:2/1}
-.card.feat .card-name{margin-top:12px;font-size:17px}
-.card.feat .card-price{font-size:19px}
-.card-media{position:relative;aspect-ratio:1;overflow:hidden;
-  border-radius:14px;background:#f7f7f4;
+/* ── TODAY'S DROP ── 가로 스와이프 한 줄 */
+.drop{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+  margin:0 -16px;padding:0 16px 2px;
+  /* 스냅 기준을 화면 끝이 아니라 좌우 여백(16px)에 맞춘다 —
+     없으면 첫 카드가 화면 끝에 붙어버린다 */
+  scroll-padding:0 16px;
+  scrollbar-width:none;-ms-overflow-style:none}
+.drop::-webkit-scrollbar{display:none}
+.card{flex:0 0 128px;width:128px;min-width:0;display:flex;flex-direction:column;
+  scroll-snap-align:start}
+/* LIVE 상품은 맨 앞으로만 (확대 카드는 쓰지 않는다) */
+.card.feat{order:-1}
+.card.feat .card-name{margin-top:8px;font-size:13px}
+.card.feat .card-price{font-size:15px}
+.drop .playnote{flex:1 1 auto;margin-top:0}
+.card-media{position:relative;aspect-ratio:6/5;overflow:hidden;
+  border-radius:12px;background:#f7f7f4;
   transition:transform .18s}
 .card-media img{width:100%;height:100%;object-fit:contain;object-position:center;padding:8%}
 .card:active .card-media{transform:scale(.985)}
@@ -113,10 +122,10 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .badge.live{background:var(--live);color:#fff}
 .badge.done{background:rgba(10,10,9,.8);backdrop-filter:blur(6px);color:var(--sold);
   font:800 10.5px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.02em}
-.card-name{margin-top:10px;font-size:13.5px;font-weight:800;letter-spacing:-.04em;
-  line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+.card-name{margin-top:8px;font-size:13px;font-weight:800;letter-spacing:-.04em;
+  line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow:hidden}
-.card-price{margin-top:5px;font:800 15px Archivo,sans-serif;color:var(--lime);
+.card-price{margin-top:4px;font:800 15px Archivo,sans-serif;color:var(--lime);
   letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .card-price .w{font-family:"Pretendard Variable",Pretendard,sans-serif;
   font-size:.8em;font-weight:800;margin-left:.05em}
@@ -125,41 +134,44 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .card-price.now{color:var(--live)}
 .card-price.done{color:var(--sold)}
 
-/* ── HOW TO PLAY ── */
-.plays{display:grid;gap:10px}
-.play{padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
-.play .k{font:900 12px Archivo,sans-serif;letter-spacing:.14em;color:var(--lime)}
-.play b{display:block;margin-top:9px;font-size:16px;font-weight:800;letter-spacing:-.045em}
-.play p{margin-top:5px;color:var(--dim);font-size:12.5px;line-height:1.6}
-.playnote{margin-top:14px;text-align:center;color:var(--dim);font-size:11.5px;line-height:1.7}
+/* ── HOW TO PLAY ── 3열 컴팩트 */
+.plays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.play{padding:11px 9px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.play .k{font:900 9.5px Archivo,sans-serif;letter-spacing:.1em;color:var(--lime)}
+.play b{display:block;margin-top:6px;font-size:12.5px;font-weight:800;
+  letter-spacing:-.05em;line-height:1.3}
+.play p{margin-top:4px;color:var(--dim);font-size:10.5px;line-height:1.45}
+.playnote{margin-top:9px;text-align:center;color:var(--dim);font-size:11px;line-height:1.6}
 
-/* ── REWARD ── */
-.reward{padding:26px 20px;background:var(--panel);border:1px solid var(--line);
-  border-radius:20px;text-align:center}
-.reward .en{font:800 10px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.reward h2{margin-top:12px;font-size:clamp(20px,5.4vw,26px);line-height:1.32;
-  letter-spacing:-.05em;font-weight:800}
-.reward h2 em{font-style:normal;color:var(--lime)}
-.reward .sub{margin-top:12px;color:var(--muted);font-size:12.5px}
-.reward .rlink{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.reward .rlink a{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:-.02em}
-.reward .rlink a:hover{color:var(--text)}
+/* ── REWARD ── 한 줄 배너 */
+.reward{display:flex;align-items:center;gap:11px;padding:12px 14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.reward .rico{flex:0 0 auto;font:900 9.5px Archivo,sans-serif;letter-spacing:.14em;
+  color:#0a0a09;background:var(--lime);border-radius:6px;padding:5px 7px}
+.reward .rtxt{min-width:0;flex:1 1 auto}
+.reward .rtxt b{display:block;font-size:13px;font-weight:800;letter-spacing:-.045em;
+  line-height:1.3}
+.reward .rtxt b em{font-style:normal;color:var(--lime)}
+.reward .rtxt i{display:block;margin-top:3px;font-style:normal;
+  color:var(--dim);font-size:10.5px;line-height:1.4}
+.reward .rarr{flex:0 0 auto;color:var(--dim);font-size:15px;font-weight:800}
+.reward:hover .rarr{color:var(--text)}
 
 /* ── 방금 끝난 가격 / 첫 기록 ── */
-.sold-list{display:flex;flex-direction:column;gap:8px}
-.sold{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;
-  padding:10px 12px;background:var(--panel);border-radius:12px}
+.sold-list{display:flex;flex-direction:column;gap:6px}
+.sold{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:8px 10px;background:var(--panel);border-radius:10px}
 .sold-img{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eeeee9}
 .sold-img img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.4) brightness(.85)}
 .sold-info{min-width:0}
 .sold-info h3{font-size:13px;font-weight:800;letter-spacing:-.04em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sold-info span{display:block;margin-top:2px;font-size:10.5px;color:var(--dim)}
-.sold-price{font:900 17px Archivo,sans-serif;color:var(--sold);
+.sold-price{font:900 16px Archivo,sans-serif;color:var(--sold);
   letter-spacing:-.04em;white-space:nowrap;font-variant-numeric:tabular-nums}
-.empty{padding:28px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center}
-.empty h3{font-size:18px;letter-spacing:-.05em;font-weight:800}
-.empty p{margin-top:12px;color:var(--muted);font-size:12.5px;line-height:1.8}
+.empty{padding:18px 14px;border:1px dashed var(--line);border-radius:14px;text-align:center}
+.empty h3{font-size:16px;letter-spacing:-.05em;font-weight:800}
+.empty p{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.6}
 
 .noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:repeating-linear-gradient(135deg,#101010,#101010 10px,#151514 10px,#151514 20px);
@@ -179,16 +191,19 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 .bar .cta{width:auto;flex:0 0 auto;padding:0 20px;min-height:48px;
   font-size:14.5px;border-radius:12px;box-shadow:none}
 
-.foot{padding:38px 0 44px;border-top:1px solid var(--line);text-align:center}
-.foot p{margin-top:14px;color:var(--dim);font-size:11px;line-height:1.85}
+.foot{padding:22px 0 26px;border-top:1px solid var(--line);text-align:center}
+.foot p{margin-top:9px;color:var(--dim);font-size:11px;line-height:1.6}
 
 /* 진입 fade-up */
 .rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
 .rv.in{opacity:1;transform:none}
 
 @media(min-width:600px){
-  .card.feat .card-media{aspect-ratio:21/9}
-  .plays{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .card{flex-basis:150px;width:150px}
+  .play{padding:14px 12px}
+  .play b{font-size:14px}
+  .play p{font-size:11.5px}
+  .reward .rtxt b{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}
   .rv{opacity:1;transform:none}}
@@ -247,15 +262,17 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 
   <!-- REWARD -->
   <section class="sec wrap" data-rv>
-    <div class="reward">
-      <div class="en">REWARD</div>
-      <h2>입찰만 해도<br><em>커피 기프티콘 10명</em> 추첨</h2>
-      <p class="sub">회원가입 필요 없음 · 1인 1추첨권</p>
-      <!-- ⚠️ 커피 추첨 외의 경품(사전 가격맞히기 상금)은 반복 LIVE 에서 제외됐다.
-           입장 시점이 제각각이라 "사전 예측" 이 성립하지 않는다.
-           경품은 커피 추첨 하나만 노출한다. 광고 문구에도 다른 상금을 넣지 말 것. -->
-      <div class="rlink"><a href="result.html">경품 규정 · 당첨자 발표 →</a></div>
-    </div>
+    <!-- ⚠️ 커피 추첨 외의 경품(사전 가격맞히기 상금)은 반복 LIVE 에서 제외됐다.
+         입장 시점이 제각각이라 "사전 예측" 이 성립하지 않는다.
+         경품은 커피 추첨 하나만 노출한다. 광고 문구에도 다른 상금을 넣지 말 것. -->
+    <a class="reward" href="result.html">
+      <span class="rico">REWARD</span>
+      <span class="rtxt">
+        <b>입찰만 해도 <em>커피 기프티콘 10명</em> 추첨</b>
+        <i>회원가입 필요 없음 · 1인 1추첨권 · 경품 규정과 당첨자 발표</i>
+      </span>
+      <span class="rarr" aria-hidden="true">→</span>
+    </a>
   </section>
 
   <!-- 방금 끝난 가격 -->
@@ -275,11 +292,7 @@ h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
     </div>
   </section>
 
-  <!-- 하단 CTA -->
-  <section class="sec wrap" data-rv>
-    <a class="cta" href="live.html">지금 LIVE 참여하기 <span aria-hidden="true">→</span></a>
-    <p class="disclose">가입 없이 바로 참여 · 실제 결제 없음 · 배송 없음</p>
-  </section>
+  <!-- ⚠️ 하단 CTA 는 제거했다. CTA 는 HERO + sticky bar 두 개만 유지한다. -->
 </main>
 
 <footer class="foot"><div class="wrap">
