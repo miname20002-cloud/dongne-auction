@@ -50,7 +50,7 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 @keyframes pulse{50%{opacity:.2}}
 
 /* ── HERO ── */
-.hero{padding:21px 0 24px;text-align:center}
+.hero{padding:14px 0 12px;text-align:center}
 .kicker{display:inline-flex;align-items:center;gap:7px;margin-bottom:11px;
   padding:5px 11px;border-radius:999px;border:1px solid currentColor;color:var(--dim);
   font:800 10px Archivo,sans-serif;letter-spacing:.18em}
@@ -60,7 +60,7 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 .hero h1{font-size:clamp(25px,7vw,36px);line-height:1.18;
   letter-spacing:-.055em;font-weight:800}
 .hero h1 em{font-style:normal;color:var(--lime)}
-.hero .big{margin-top:10px;color:var(--text);
+.hero .big{margin-top:8px;color:var(--text);
   font:800 clamp(46px,13.5vw,72px)/.92 Archivo,sans-serif;
   letter-spacing:-.065em;font-variant-numeric:tabular-nums}
 .hero .big .cur{font-family:"Pretendard Variable",Pretendard,sans-serif;
@@ -69,11 +69,11 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 .hero .big .start{font-family:Archivo,sans-serif;font-weight:900;
   font-size:.25em;letter-spacing:.10em;color:var(--lime);
   vertical-align:.9em;margin-left:.22em}
-.hero .sub{margin-top:9px;color:var(--muted);font-size:13.5px;letter-spacing:-.02em}
-.hero .cta{margin-top:15px}
-.disclose{margin-top:9px;text-align:center;font-size:11.5px;font-weight:700;
+.hero .sub{margin-top:7px;color:var(--muted);font-size:13.5px;letter-spacing:-.02em}
+.hero .cta{margin-top:12px}
+.disclose{margin-top:7px;text-align:center;font-size:11.5px;font-weight:700;
   color:var(--muted);line-height:1.6}
-.fine{margin-top:8px;text-align:center;font-size:11px;color:var(--dim);line-height:1.55}
+.fine{margin-top:6px;text-align:center;font-size:11px;color:var(--dim);line-height:1.55}
 .fine b{color:var(--muted);font-weight:800}
 
 /* cta */
@@ -87,61 +87,58 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 .cta.live{background:var(--live);color:#fff;box-shadow:0 10px 30px rgba(255,77,77,.16)}
 
 /* section */
-.sec{padding:22px 0;border-top:1px solid var(--line)}
-.sec-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sec{padding:11px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:8px}
 .sec-head .en{display:block;margin-bottom:5px;font:800 10px Archivo,sans-serif;
   letter-spacing:.2em;color:var(--dim)}
 .sec-head h2{font-size:18px;letter-spacing:-.05em;font-weight:800;line-height:1.25}
 .count{flex:0 0 auto;font-size:11.5px;font-weight:800;color:var(--dim);letter-spacing:-.02em}
 
-/* ── TODAY'S DROP ── 가로 스와이프 한 줄 */
-.drop{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
-  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
-  margin:0 -16px;padding:0 16px 2px;
-  /* 스냅 기준을 화면 끝이 아니라 좌우 여백(16px)에 맞춘다 —
-     없으면 첫 카드가 화면 끝에 붙어버린다 */
-  scroll-padding:0 16px;
-  scrollbar-width:none;-ms-overflow-style:none}
-.drop::-webkit-scrollbar{display:none}
-.card{flex:0 0 128px;width:128px;min-width:0;display:flex;flex-direction:column;
-  scroll-snap-align:start}
-/* LIVE 상품은 맨 앞으로만 (확대 카드는 쓰지 않는다) */
-.card.feat{order:-1}
-.card.feat .card-name{margin-top:8px;font-size:13px}
-.card.feat .card-price{font-size:15px}
+/* ── TODAY'S DROP ── 화면 폭에 상품 전부를 균등 배치 (스와이프 없음)
+   ⚠️ 여기는 쇼핑몰 상품 진열이 아니다. "오늘 뭐가 나오는지" 1~2초 훑는 용도다.
+   카드 확대(FEATURED)·상품 설명·2줄 상품명·가로 스크롤 — 다시 넣지 말 것. */
+.drop{display:flex;gap:6px;overflow:hidden}
+/* flex:1 1 0 — 상품이 5개든 6개든 한 줄에 균등하게 나눠 담는다(가로 overflow 없음) */
+.card{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
 .drop .playnote{flex:1 1 auto;margin-top:0}
-.card-media{position:relative;aspect-ratio:6/5;overflow:hidden;
-  border-radius:12px;background:#f7f7f4;
+/* 이미지가 카드 높이를 늘리지 못하게 media 높이를 고정한다 */
+.card-media{position:relative;height:62px;flex:0 0 62px;overflow:hidden;
+  border-radius:10px;background:#f7f7f4;
   transition:transform .18s}
-.card-media img{width:100%;height:100%;object-fit:contain;object-position:center;padding:8%}
+.card-media img{width:100%;height:100%;object-fit:contain;object-position:center;padding:7%}
 .card:active .card-media{transform:scale(.985)}
 .card.on .card-media{outline:2px solid var(--live);outline-offset:-2px}
 .card.done .card-media img{filter:grayscale(.5) brightness(.72)}
-.badge{position:absolute;z-index:2;left:8px;top:8px;padding:5px 9px;border-radius:8px;
-  font:900 10px Archivo,sans-serif;letter-spacing:.1em}
+.badge{position:absolute;z-index:2;left:5px;top:5px;padding:2px 5px;border-radius:5px;
+  font:900 8px Archivo,sans-serif;letter-spacing:.08em}
 .badge.live{background:var(--live);color:#fff}
 .badge.done{background:rgba(10,10,9,.8);backdrop-filter:blur(6px);color:var(--sold);
-  font:800 10.5px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.02em}
-.card-name{margin-top:8px;font-size:13px;font-weight:800;letter-spacing:-.04em;
-  line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-  overflow:hidden}
-.card-price{margin-top:4px;font:800 15px Archivo,sans-serif;color:var(--lime);
-  letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  font:800 8.5px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.02em}
+.card-name{margin-top:6px;font-size:10.5px;font-weight:800;letter-spacing:-.045em;
+  line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-price{margin-top:2px;font:800 11px Archivo,sans-serif;color:var(--lime);
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-price .w{font-family:"Pretendard Variable",Pretendard,sans-serif;
-  font-size:.8em;font-weight:800;margin-left:.05em}
-.card-price small{font:800 10px "Pretendard Variable",Pretendard,sans-serif;
-  color:var(--dim);letter-spacing:-.02em;margin-left:6px}
+  font-size:.85em;font-weight:800;margin-left:.05em}
 .card-price.now{color:var(--live)}
 .card-price.done{color:var(--sold)}
 
-/* ── HOW TO PLAY ── 3열 컴팩트 */
-.plays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.play{padding:11px 9px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
-.play .k{font:900 9.5px Archivo,sans-serif;letter-spacing:.1em;color:var(--lime)}
-.play b{display:block;margin-top:6px;font-size:12.5px;font-weight:800;
-  letter-spacing:-.05em;line-height:1.3}
-.play p{margin-top:4px;color:var(--dim);font-size:10.5px;line-height:1.45}
-.playnote{margin-top:9px;text-align:center;color:var(--dim);font-size:11px;line-height:1.6}
+/* ── HOW TO PLAY ── 한 줄 rule strip
+   ⚠️ 3열 박스 카드·설명문·아이콘은 제거했다. 규칙은 이 한 줄이 전부다. */
+.rules{display:flex;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.rules span{flex:1 1 0;min-width:0;padding:9px 4px;text-align:center;
+  font-size:12px;font-weight:800;letter-spacing:-.045em;line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rules span+span{border-left:1px solid var(--line)}
+.rules b{color:var(--lime);font-weight:900}
+/* rule strip 아래 한 줄 흐름 — 박스/배경/테두리 없이 텍스트만 */
+.flow{margin:11px 0 5px;text-align:center;color:var(--text);
+  font-size:13.5px;font-weight:700;letter-spacing:-.04em;line-height:1.45}
+.flow b{color:var(--lime);font-weight:800}
+.flow i{font-style:normal;color:var(--dim);margin:0 3px}
+.playnote{margin-top:7px;text-align:center;color:var(--dim);font-size:11px;line-height:1.6}
 
 /* ── REWARD ── 한 줄 배너 */
 .reward{display:flex;align-items:center;gap:11px;padding:12px 14px;
@@ -154,13 +151,15 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 .reward .rtxt b em{font-style:normal;color:var(--lime)}
 .reward .rtxt i{display:block;margin-top:3px;font-style:normal;
   color:var(--dim);font-size:10.5px;line-height:1.4}
-.reward .rarr{flex:0 0 auto;color:var(--dim);font-size:15px;font-weight:800}
-.reward:hover .rarr{color:var(--text)}
+/* 카드 전체가 링크다. rarr 은 "여기 눌러도 된다"를 알리는 라벨일 뿐 별도 버튼이 아니다 */
+.reward .rarr{flex:0 0 auto;color:var(--sold);font-size:11.5px;font-weight:700;
+  letter-spacing:-.03em;white-space:nowrap}
+.reward:hover .rarr{filter:brightness(1.15)}
 
-/* ── 방금 끝난 가격 / 첫 기록 ── */
-.sold-list{display:flex;flex-direction:column;gap:6px}
-.sold{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;
-  padding:8px 10px;background:var(--panel);border-radius:10px}
+/* ── 종료된 경매 / 첫 기록 ── */
+.sold-list{display:flex;flex-direction:column;gap:5px}
+.sold{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:7px 10px;background:var(--panel);border-radius:10px}
 .sold-img{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eeeee9}
 .sold-img img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.4) brightness(.85)}
 .sold-info{min-width:0}
@@ -191,18 +190,20 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
 .bar .cta{width:auto;flex:0 0 auto;padding:0 20px;min-height:48px;
   font-size:14.5px;border-radius:12px;box-shadow:none}
 
-.foot{padding:22px 0 26px;border-top:1px solid var(--line);text-align:center}
-.foot p{margin-top:9px;color:var(--dim);font-size:11px;line-height:1.6}
+.foot{padding:14px 0 18px;border-top:1px solid var(--line);text-align:center}
+.foot p{margin-top:7px;color:var(--dim);font-size:11px;line-height:1.6}
 
 /* 진입 fade-up */
 .rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
 .rv.in{opacity:1;transform:none}
 
 @media(min-width:600px){
-  .card{flex-basis:150px;width:150px}
-  .play{padding:14px 12px}
-  .play b{font-size:14px}
-  .play p{font-size:11.5px}
+  /* 넓은 화면에서도 카드 폭은 flex 가 나눈다. flex-basis 를 고정하지 말 것 */
+  .drop{gap:10px}
+  .card-media{height:78px;flex-basis:78px}
+  .card-name{font-size:12px}
+  .card-price{font-size:12.5px}
+  .rules span{font-size:13.5px;padding:11px 6px}
   .reward .rtxt b{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}
@@ -222,7 +223,8 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
   <!-- HERO -->
   <section class="hero wrap">
     <div class="kicker hidden" id="heroKicker"></div>
-    <h1>오늘 뭐가<br><em>1,000원</em>에 끝날까?</h1>
+    <!-- ⚠️ 가격 메시지는 아래 큰 1,000원 한 번만. h1 에 가격을 다시 넣지 말 것. -->
+    <h1>나의 낙찰가는?</h1>
     <div class="big">1,000<span class="cur">원</span><span class="start">START</span></div>
     <p class="sub" id="heroLine">60초마다 바뀌는 실시간 모의경매</p>
 
@@ -246,18 +248,12 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
   <!-- HOW TO PLAY -->
   <section class="sec wrap" data-rv>
     <div class="sec-head"><div><span class="en">HOW TO PLAY</span><h2>딱 이것만 알면 됩니다</h2></div></div>
-    <div class="plays">
-      <div class="play"><div class="k">60 SEC</div>
-        <b id="rule1">한 상품은 단 60초</b>
-        <p>끝나면 곧바로 다음 상품이 올라옵니다.</p></div>
-      <div class="play"><div class="k">LAST 15</div>
-        <b id="rule2">마지막 15초 이내 입찰 시 +30초</b>
-        <p>마감 직전 새 입찰이 들어오면 30초 더 이어집니다.</p></div>
-      <div class="play"><div class="k">JUST BID</div>
-        <b>입찰 1회면 커피 추첨 자동 참여</b>
-        <p>현재가보다 높은 금액을 넣기만 하면 됩니다.</p></div>
+    <div class="rules">
+      <span id="rule1"><b>60초</b> 경매</span>
+      <span id="rule2">막판 <b>+30초</b></span>
+      <span>자동 추첨</span>
     </div>
-    <p class="playnote">상품별 입찰 한도가 있습니다.</p>
+    <p class="flow"><b>천원 시작</b><i aria-hidden="true">→</i>원하는 가격을 입찰<i aria-hidden="true">→</i><b>모의 낙찰!</b></p>
   </section>
 
   <!-- REWARD -->
@@ -269,16 +265,17 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
       <span class="rico">REWARD</span>
       <span class="rtxt">
         <b>입찰만 해도 <em>커피 기프티콘 10명</em> 추첨</b>
-        <i>회원가입 필요 없음 · 1인 1추첨권 · 경품 규정과 당첨자 발표</i>
+        <i>당첨 확인 · 경품 수령 안내</i>
       </span>
-      <span class="rarr" aria-hidden="true">→</span>
+      <!-- ⚠️ 입찰하면 자동 추첨이다. "응모하기" 류 문구를 넣지 말 것 -->
+      <span class="rarr">경품 안내 <span aria-hidden="true">→</span></span>
     </a>
   </section>
 
   <!-- 방금 끝난 가격 -->
   <section class="sec wrap hidden" id="soldSec">
     <div class="sec-head">
-      <div><span class="en">CLOSED</span><h2>방금 끝난 가격</h2></div>
+      <div><span class="en">CLOSED</span><h2>종료된 경매</h2></div>
       <span class="count" id="soldN">—</span>
     </div>
     <div class="sold-list" id="soldList"></div>
@@ -336,14 +333,14 @@ function render(s){
     const done = x.state === "closed";
     let price;
     if(done && x.final_price > 0){
-      price = `<div class="card-price done">${moneyPlain(x.final_price)}<span class="w">원</span><small>최종가</small></div>`;
+      price = `<div class="card-price done">${moneyPlain(x.final_price)}<span class="w">원</span></div>`;
     }else if(on && x.current_price > s.start_price){
-      price = `<div class="card-price now">${moneyPlain(x.current_price)}<span class="w">원</span><small>현재가</small></div>`;
+      price = `<div class="card-price now">${moneyPlain(x.current_price)}<span class="w">원</span></div>`;
     }else{
       price = `<div class="card-price">${moneyPlain(s.start_price)}<span class="w">원~</span></div>`;
     }
     return `
-      <article class="card${on ? " feat on" : ""}${done ? " done" : ""}">
+      <article class="card${on ? " on" : ""}${done ? " done" : ""}">
         <div class="card-media">
           <img src="${esc(CONFIG.IMG_DIR + x.image)}" alt="${esc(x.display_name)}"
                loading="lazy" decoding="async" onerror="imgFail(this)">

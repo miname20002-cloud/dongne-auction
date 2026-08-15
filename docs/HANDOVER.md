@@ -1,73 +1,41 @@
 # 동네옥션 KR-R2 — 인계 문서
 
 작성: **2026-08-15 사무실 작업 종료 시점**
+최종 갱신: **2026-08-16 — 광고 시작 전 개발 작업 완료**
 이전 인계 문서를 이 문서로 **교체**합니다.
 
 ---
 
-## 🔴 지금 상태 (한 줄)
+## 🟢 지금 상태 (한 줄)
 
-> **수동 리허설 완료 / 자동 반복 엔진 최종 리허설 미완료.**
-> 코드·시트·프론트는 준비됐고, `auto_run=FALSE` 라 자동 전환은 아직 돌지 않았다.
+> **광고 시작 전 개발 작업 완료. 남은 것은 광고 유입 테스트와 지표 확인뿐이다.**
 
-**"모든 테스트 완료" 가 아니다.** 아래 "미완료" 절을 반드시 먼저 읽을 것.
+```
+✅ 광고 테스트용 랜딩 index.html   완료
+✅ LIVE 경매 live.html             완료
+✅ 경품 안내 result.html           완료
+✅ Apps Script 경매 엔진           검증 완료 · 동결(freeze)
+```
+
+⚠️ **엔진은 동결이다.** 광고 테스트 중 **실제 버그가 발견될 때만** 재개한다.
+추첨 기능은 지금 개발하지 않는다.
 
 ---
 
-## 🔴 다음 세션 첫 작업 — 연장 규칙 분리
-
-최종 요구사항이 **"LOT 60초 · 마지막 15초 이내 입찰 시 30초 연장"** 으로 확정됐다.
-현재 코드는 `extend_sec` **하나가 진입조건과 연장시간을 동시에** 담당한다.
-
-```js
-// 지금 (handleBid_)
-if(leftSec <= cfg.extend_sec) newClose = now + cfg.extend_sec;   // 15→15 또는 30→30
-```
-
-**둘을 분리해야 한다.**
+## 현재 경매 규칙 (확정 · 가동 중)
 
 ```
-lot_duration_sec    60
-extend_trigger_sec  15   ← 신규. 이 시간 이내에 입찰하면
-extend_sec          30   ← 이만큼 연장
+LOT      내부 명칭은 유지. 사용자 화면에는 "경매" 로만 표시한다
+상품당   60초
+연장     남은 시간 15초 이하에서 입찰 발생 시, 마감시각 = 입찰시각 + 30초
+         반복 연장 가능 (횟수 제한 없음)
+상품 사이 10초
+진행     5개 상품 자동 진행 · auto_run=TRUE 상태에서 자동
+운영     Apps Script 함수 수동 실행 불필요
 ```
 
-### 바꿔야 할 곳 6군데
-
-| 위치 | 내용 |
-|---|---|
-| `config` 시트 | `extend_trigger_sec` 열 추가 = 15 · `extend_sec` 를 30 으로 |
-| `getRound_` | `extend_trigger : num_(r.extend_trigger_sec) \|\| 15` 반환 |
-| `handleBid_` | 조건은 `extend_trigger`, 더하는 값은 `extend_sec` |
-| `buildState_` | 응답에 `extend_trigger_sec` 추가 (`extend_sec` 도 유지) |
-| `live.html` | `hotSec` 을 `STATE.extend_trigger_sec` 로 (지금은 `extend_sec`) |
-| `selfTest` | `config` 필수 열에 `extend_trigger_sec` 추가 |
-
-⚠️ `live.html` 의 빨강(hot) 구간은 **"지금 넣으면 연장된다"** 는 뜻이다.
-`extend_sec`(30) 을 쓰면 60초 LOT 의 절반이 빨갛게 되고 의미가 어긋난다.
-반드시 `extend_trigger_sec`(15) 이어야 한다.
-
-⚠️ `index.html` RULES 문구도 `마감 직전 새 입찰이 들어오면 15초 더`
-→ **`30초 더`** 로 고쳐야 한다.
-
-⚠️ `STALE = lot_duration + intermission` 은 이 변경과 무관하다. 건드리지 말 것.
-
-### 그다음 — 자동 반복 최종 리허설
-
-```
-1  위 6곳 반영 → node --check → Apps Script 저장
-2  lot_duration_sec 120 → 60
-3  auto_run = TRUE
-4  LOT1 → 2 → 3 → 4 → 5 → 다음 cycle 자동 반복 확인
-5  마지막 15초 입찰 → 30초 연장 확인 (게이지 재충전 포함)
-6  LOT5 종료 → 10초 뒤 cycle 초기화 + cycle_no 증가 확인
-7  stale recover (30분 방치 후 첫 방문 → 새 cycle LOT1)
-8  경계 69 / 70 / 71초  ⚠️ STALE = 60+10 = 70초 기준
-9  동시입찰 10건 → 20건 (busy 거절 비율 실측)
-10 전부 통과 후 5개 파일 동시 배포
-```
-
-⚠️ 8번은 `lot_duration=60` 으로 바꾼 **뒤에** 해야 한다. 120초 상태에서는 STALE 이 130초다.
+`extend_trigger_sec`(15) / `extend_sec`(30) 분리는 **완료**됐다.
+`live.html` 의 빨강(hot) 구간도 `extend_trigger_sec` 를 쓴다 — `extend_sec`(30) 로 되돌리지 말 것.
 
 ---
 
@@ -88,20 +56,18 @@ extend_sec          30   ← 이만큼 연장
 ✅ 로컬 프론트 → 배포된 Apps Script API / Google Sheet 연동  정상
 ```
 
-## 미완료 — 반드시 남은 것
+## 미완료 → 08-16 해소 결과
 
 ```
-❌ 연장 규칙 분리 (extend_trigger_sec 15 / extend_sec 30)   ← 최우선
-❌ auto_run=TRUE 자동 반복 (LOT1→5→다음 cycle)
-❌ 15초 막판입찰 → 30초 연장 실측
-❌ LOT5 종료 → cycle 초기화 자동 실행
-❌ stale recover 실측 (30분 방치)
-❌ 경계 69 / 70 / 71초
-❌ 동시입찰 10 · 20건 처리량 실측
-❌ 모바일 실기기 (반복 LIVE 기준)
-❌ 5개 파일 동시 배포
-❌ 광고 소재 3종
-❌ invalid_above 당일 최저가 재검증
+✅ 연장 규칙 분리 (extend_trigger_sec 15 / extend_sec 30)
+✅ auto_run=TRUE 자동 반복 (LOT1→5→다음 cycle)
+✅ 15초 막판입찰 → 30초 연장
+✅ LOT5 종료 → cycle 초기화 자동 실행
+✅ stale recover
+✅ 경계 69 / 70 / 71초
+✅ 파일 배포 (GitHub Pages)
+❌ 광고 소재 3종                      ← 개발 아님. 광고 착수 시 진행
+❌ invalid_above 당일 최저가 재검증    ← LOT3 109,900 임시값 (아래 "상품" 참조)
 ```
 
 ---
@@ -164,19 +130,34 @@ cycle_id     D1-C007 형식
 ```
 
 **index.html** — 카운트다운 제거, CTA 전부 `live.html`
+**08-16 최종 구조로 재작성됨. 아래가 현행이다.**
 ```
-전부 1,000원부터 / 신품 5개가 60초씩 연달아 / 들어가면 바로 참여합니다
-RULES  한 상품에 60초 · 사이 10초 · 마지막 15초는 연장
-REWARD 입찰만 해도 커피 추첨 (예측왕 3만원 제거)
+HERO      "나의 낙찰가는?" + 큰 1,000원 START
+          회원가입 없이 바로 참여 · 결제 없음
+TODAY'S   상품 5개 컴팩트 표시 (화면 폭 균등 분할 · 가로 스크롤 없음)
+          이미지 62px · 상품명 1줄 · 가격 1,000원~ · 현재 상품만 작은 LIVE badge
+HOW TO    60초 경매 | 막판 +30초 | 자동 추첨   (한 줄 rule strip)
+          천원 시작 → 원하는 가격을 입찰 → 모의 낙찰!
+REWARD    입찰 1회 이상이면 커피 기프티콘 10명 추첨
+          우측 "경품 안내 →" (orange) · 카드 전체가 result.html 링크
+CLOSED    "종료된 경매"
+하단      sticky 입찰 CTA (→ live.html)
 ```
+⚠️ 상품을 크게 보여주는 쇼핑몰 진열로 되돌리지 말 것. FEATURED 확대 카드·상품 설명·
+가로 스와이프·3열 박스 HOW TO PLAY 는 전부 제거된 상태다.
+⚠️ 페이지 세로 길이 ≈ 1,100px (390px 기준). 늘리지 말 것.
 
-**result.html** — 181줄, 경품·캠페인 안내 전용
+**result.html** — 경품·캠페인 안내 전용
 ```
 action=result 호출 제거 · 성적/등급/예측왕/다음회차 전부 제거
 참여 방식 3단계 · 당첨자 발표 안내 · 수령 확인 코드
-[경품 신청 →] · [다시 경매 참여하기 →]
+발표 전이라 [경품 신청 →] 버튼 제거 → 안내 텍스트 "당첨자 발표 후 신청이 열립니다"
+  (배경·테두리 없음 · dim · 클릭 불가 · Google Form URL 은 live 코드에서 삭제)
+[다시 경매 참여하기 →] 유지
 당첨자 목록 자리를 hidden 으로 미리 넣어둠 (추첨 후 닉네임 10개 수동 입력)
 ```
+⚠️ 발표 전에는 Google Form 링크를 **노출도 활성화도 하지 않는다.**
+복구 방법은 `result.html` 스크립트 상단 주석에 적어뒀다.
 
 **common.js** — 한 줄
 ```js
@@ -189,9 +170,11 @@ cycle_changed: "새 경매가 시작됐습니다. 다시 입찰해주세요"
 
 ```
 제목       동네옥션 모의경매 — 경품 신청
-신청 구분   예측왕 (3만원) / 커피 쿠폰 당첨
-필수 5문항  신청 구분 · 수령 확인 코드 · 닉네임 · 휴대폰 · 개인정보 동의
+신청 구분   커피 쿠폰 당첨   ⚠️ 예측왕(3만원) 선택지는 제거됨 (08-16)
+필수 문항   수령 확인 코드 · 닉네임 · 휴대폰 · 개인정보 동의
 설정       이메일 수집 안 함 · 응답 수정 불가 · 로그인 불필요
+검증       비로그인 상태 제출 가능 확인됨
+상태       발표 전 — result.html 에서 비활성. 발표 후 당첨자에게만 연다
 ```
 https://forms.gle/xvKd7o7G9vSewtCa9
 
@@ -228,11 +211,14 @@ LOT 60초 × 5 · 사이 10초 · LOT5 후 10초 결과 → 다음 사이클 자
 
 ### 경품
 ```
-입찰 1회 이상 = 커피 추첨 자동 참여 (응모 행위 없음)
+입찰 accepted 1회 이상 = 커피 추첨 자동 참여 (응모 행위 없음)
 추첨 10명 · 1인 1추첨권 · 당첨자만 폼에 신청 → 운영자 대조 → 기프티콘
+발표 전  Google Form 신청 비활성 · 안내문 "당첨자 발표 후 신청이 열립니다"
+발표 후  당첨자만 수령 확인 코드 + 닉네임 + 휴대폰 번호로 신청
 예측왕 3만원은 이번 3일 테스트에서 제외 (입장 시점이 제각각이라 사전 예측 불성립)
 ```
-⚠️ 화면·광고에 **"응모하기"** 라는 행동을 요구하지 말 것.
+⚠️ 화면·광고에 **"응모하기" / "신청하기"** 라는 행동을 요구하지 말 것.
+   입찰 1회 이상이면 자동 참여이므로 별도 행동이 필요한 것처럼 보이면 안 된다.
 ⚠️ 지급 완료 후 폼 응답 시트의 휴대폰 번호를 **실제로 삭제**할 것.
 
 ### 측정
@@ -266,7 +252,14 @@ cycle_id 는 서버 cfg 에서 찍는다 (클라이언트 값 의존 금지)
 
 **저장소** `https://github.com/miname20002-cloud/dongne-auction` (Public)
 **시트** `1oFnQ1Q0JuVQbLhOu-1cqosElMMOPfD2BRTqnSrK7I1Q` — events / lots / predictions / config / 대시보드
-**Pages** `https://miname20002-cloud.github.io/dongne-auction/web/live.html`
+
+**Pages — 광고 연결 URL**
+```
+랜딩(광고 랜딩)  https://miname20002-cloud.github.io/dongne-auction/web/index.html
+LIVE            https://miname20002-cloud.github.io/dongne-auction/web/live.html
+경품 안내        https://miname20002-cloud.github.io/dongne-auction/web/result.html
+```
+⚠️ 광고는 **랜딩(index.html)** 으로 연결한다.
 
 **Web App** (변경 없음)
 ```
@@ -297,45 +290,41 @@ tt_switch_01  상품 후크    tt_1000_01  포맷 후크    tt_fast_01  속도·
 
 ---
 
+## 테스트 종료 후에만 할 일 (지금 하지 않는다)
+
+```
+1  전체 광고 테스트 기간의 accepted 입찰 session_id 수집
+2  session_id 중복 제거
+3  무작위 10명 추첨
+4  result.html 에 당첨자 발표 (#winners hidden 해제 + 닉네임 10개 입력)
+5  Google Form 신청 활성화 (result.html 스크립트 상단 주석대로 복구)
+6  당첨자 session_id / 닉네임 대조
+7  기프티콘 발송
+8  지급 완료 후 폼 응답 시트의 휴대폰 번호 삭제
+```
+
+⚠️ 추첨 기능은 **개발하지 않는다.** 위 1~3은 수동으로 처리한다.
+⚠️ Apps Script 는 추가 수정하지 않는다. **실제 버그가 발견될 때만** 엔진 작업을 재개한다.
+
+---
+
 ## 다음 세션 시작 방법
 
 ```
-이 문서 + docs\AppsScript_Code.gs (편집기 현행본) 을 올린다
-→ "연장 규칙 분리부터 시작하자"
+이 문서를 올린다 → "실제 광고 유입 테스트 및 지표 확인부터 시작하자"
 ```
 
-코드를 만질 일이 생기면 `web\live.html` / `index.html` / `result.html` / `js\common.js` 추가.
+엔진을 만질 일이 생겼을 때만 `docs\AppsScript_Code.gs` 를 추가로 올린다.
+프론트를 만질 일이 생기면 `web\index.html` / `live.html` / `result.html` / `js\common.js`.
 
-**권장 모델 티어**: 표준. 남은 것은 6곳 수정 + 실측이다.
+**권장 모델 티어**: 표준. 남은 것은 개발이 아니라 지표 확인이다.
 
 [다음 작업 시작점]
 
-KR-R2 최종 규칙
-- LOT 기본시간: 60초
-- 연장 진입 조건: 남은 시간 15초 이하
-- 연장 시간: +30초
-- LOT 사이: 10초
-- 사이클 결과: 10초
+> **실제 광고 유입 테스트 및 지표 확인**
 
-현재 문제
-- extend_sec 하나가 연장 조건과 연장 시간을 겸하면 안 됨.
-- extend_trigger_sec=15 / extend_sec=30으로 분리 필요.
-
-완료
-- selfTest 통과
-- checkCycle 정상
-- reset 정상
-- LOT1 수동 오픈/입찰/마감 정상
-- intermission/NEXT LOT 정상
-- LOT2 수동 오픈 정상
-- 로컬 프론트 ↔ Apps Script ↔ Sheet 연동 정상
-
-미완료
-1. 연장 조건/시간 분리
-2. 60초 최종값 적용
-3. auto_run=TRUE
-4. LOT1→LOT5 자동전환
-5. 마지막 15초 입찰 → +30초 검증
-6. LOT5→다음 cycle 자동 리셋
-7. stale/recover 및 69/70/71 경계
-8. 최종 배포
+- 광고는 랜딩(index.html)으로 연결
+- 핵심 지표: (cycle_id, lot_no) 별 고유 입찰 세션 → 3명 이상 비율
+- 사이클 잔존 = 한 세션이 몇 개 사이클에 걸쳐 입찰했는가
+- 대시보드에 `cycle_id` 축 추가 필요 (아직 `round_id` 단일 차원)
+- 개발 작업은 광고 시작 전 기준으로 완료 상태다
