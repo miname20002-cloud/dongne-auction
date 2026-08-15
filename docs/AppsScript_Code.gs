@@ -24,6 +24,12 @@
  *  D. 캐시된 server_time 재사용 금지 → 응답 직전 fresh 값으로 덮어씀
  *  E. rankPredictions 를 회차 전체 통합 순위로 변경 (예측왕 1명)
  *  F. action=result 신설 — 회차 성적표 (읽기 전용 • 시트 쓰기 0건)
+ *
+ *  ── 2026-08-15 반복 LIVE 엔진 ──
+ *  G. 60초 LOT × 5 / 사이 10초 / 마지막 15초 이내 입찰 시 +30초
+ *  H. LOT5 종료 10초 뒤 새 cycle 자동 시작, cycle_id=D1-C001 형식
+ *  I. 무관중 stale 복구, 입찰 배치 쓰기, cycle 경계 cfg 재조회
+ *  J. predict/9시 phase는 반복 LIVE에서 사용하지 않음
  * ══════════════════════════════════════════════════════════
  */
 
@@ -144,7 +150,8 @@ function logEvent_(p){
       round_id     : p.round_id || '',
       market       : p.market || '',
       locale       : p.locale || '',
-      currency     : p.currency || ''
+      currency     : p.currency || '',
+      cycle_id     : p.cycle_id || ''
     };
     sh.appendRow(head.map(h => Object.prototype.hasOwnProperty.call(data, h) ? data[h] : ''));
   }catch(err){
@@ -157,24 +164,43 @@ function logEvent_(p){
 function getRound_(market){
   const { rows } = readTable_(S_CONFIG);
   const m = String(market || 'KR').toUpperCase();
-  /* ⚠️ fallback 금지 — 다른 시장의 라운드로 넘어가면
-     $1 START 인 US 클라이언트가 KRW 라운드에 붙는 사고가 난다 */
+  /* ⚠️ fallback 금지 — 다른 시장 라운드로 넘어가면 통화가 어긋난다 */
   const r = rows.filter(x => String(x.market).toUpperCase() === m &&
                              String(x.active).toUpperCase() === 'TRUE')[0];
   if(!r) throw new Error('활성 라운드 없음: ' + m +
     ' (config 에서 market=' + m + ' 이고 active=TRUE 인 행이 필요합니다)');
+
+  const cycleNo = num_(r.cycle_no) || 1;
+  const day     = num_(r.campaign_day) || 1;
+
   return {
-    round_id     : String(r.round_id),
-    market       : String(r.market).toUpperCase(),
-    currency     : String(r.currency || 'KRW'),
-    timezone     : String(r.timezone || 'Asia/Seoul'),
+    _row          : r._row,
+    round_id      : String(r.round_id),
+    market        : String(r.market).toUpperCase(),
+    currency      : String(r.currency || 'KRW'),
+    timezone      : String(r.timezone || 'Asia/Seoul'),
     locale_default: String(r.locale_default || 'ko'),
-    start_price  : num_(r.start_price) || 1000,
-    min_unit     : num_(r.min_unit) || 1000,
-    predict_close: toDate_(r.predict_close_at),
-    auction_start: toDate_(r.auction_start_at),
-    lot_duration : num_(r.lot_duration_sec) || 120,
-    extend_sec   : num_(r.extend_sec) || 30
+    start_price   : num_(r.start_price) || 1000,
+    min_unit      : num_(r.min_unit) || 1000,
+
+    /* 기존 시각 필드는 보존하지만 반복 LIVE 상태 판정에는 사용하지 않는다. */
+    predict_close : toDate_(r.predict_close_at),
+    auction_start : toDate_(r.auction_start_at),
+
+    lot_duration  : num_(r.lot_duration_sec) || 60,
+    /* extend_trigger = 연장 진입 조건(남은 시간), extend_sec = 실제 연장되는 시간.
+       둘은 별개다. 하나로 겸용하지 않는다. */
+    extend_trigger: num_(r.extend_trigger_sec) || 15,
+    extend_sec    : num_(r.extend_sec) || 30,
+    intermission  : num_(r.intermission_sec) || 10,
+    cooldown      : num_(r.cooldown_sec) || 10,
+
+    cycle_no      : cycleNo,
+    campaign_day  : day,
+    cycle_id      : 'D' + day + '-C' + String(cycleNo).padStart(3, '0'),
+
+    /* FALSE면 자동 전환만 멈춘다. 수동 admin 명령은 계속 동작한다. */
+    auto_run      : String(r.auto_run).toUpperCase() === 'TRUE'
   };
 }
 
@@ -197,16 +223,11 @@ function getLots_(round_id){
  *  ⚠️ 'live' 는 오직 onair LOT 이 있을 때만. 시각만으로 live 로 만들지 않는다.
  */
 function phaseOf_(cfg, lots){
-  const now = new Date();
   const st = l => String(l.state).toLowerCase();
-  const anyOnair = lots.some(l => st(l) === 'onair');
-  const anyWait  = lots.some(l => st(l) === 'wait');
-
-  if(anyOnair) return 'live';
-  if(lots.length > 0 && !anyWait) return 'ended';
-  if(cfg.auction_start && now >= cfg.auction_start) return 'standby';
-  if(cfg.predict_close && now >= cfg.predict_close) return 'closing';
-  return 'predict';
+  if(!lots.length) return 'idle';
+  if(lots.some(l => st(l) === 'onair')) return 'live';
+  if(lots.some(l => st(l) === 'wait'))  return 'intermission';
+  return 'ended';
 }
 
 /* ══════════════════ GET — state ══════════════════ */
@@ -260,54 +281,180 @@ function doGet(e){
  * (b) 캐시 가드로 중복 시도를 막는다.
  * @return {boolean} 마감이 실제로 일어났으면 true
  */
-function autoCloseExpired_(cfg){
+function lastCloseAt_(lots){
+  let best = null;
+  lots.forEach(l => {
+    const t = toDate_(l.close_at);
+    if(t && (!best || t > best)) best = t;
+  });
+  return best;
+}
+
+function openLotRow_(sh, head, row, cfg){
+  const close = new Date(Date.now() + cfg.lot_duration * 1000);
+  sh.getRange(row, colIndex_(head, 'state')).setValue('onair');
+  sh.getRange(row, colIndex_(head, 'close_at'))
+    .setValue(Utilities.formatDate(close, cfg.timezone, "yyyy-MM-dd'T'HH:mm:ssXXX"));
+}
+
+function closeLotRow_(sh, head, l, cfg){
+  /* final_price 먼저, state 나중 — 부분 실패 시 closed/가격공백 방지 */
+  sh.getRange(l._row, colIndex_(head, 'final_price'))
+    .setValue(num_(l.current_price) || cfg.start_price);
+  sh.getRange(l._row, colIndex_(head, 'state')).setValue('closed');
+
+  logEvent_({
+    event_type:'lot_closed',
+    lot_no:num_(l.lot_no),
+    amount:num_(l.current_price) || cfg.start_price,
+    nickname:String(l.current_holder || ''),
+    accepted:true,
+    round_id:cfg.round_id,
+    market:cfg.market,
+    currency:cfg.currency,
+    cycle_id:cfg.cycle_id
+  });
+}
+
+/**
+ * 사이클 리셋 + cycle_no 증가.
+ * 5 LOT 각각을 행 단위 배치 쓰기로 초기화한다.
+ */
+function resetCycle_(cfg){
+  const sh = sheet_(S_LOTS);
+  const { head, rows } = readTable_(S_LOTS);
+  const inRound = rows.filter(r => String(r.round_id) === cfg.round_id)
+                      .sort((a, b) => (num_(a.order_no) || 0) - (num_(b.order_no) || 0));
+  if(!inRound.length) throw new Error('lots 없음: ' + cfg.round_id);
+
+  const cols = ['state','current_price','current_holder','holder_session',
+                'bid_count','close_at','final_price'];
+  const idx = {};
+  cols.forEach(c => {
+    idx[c] = head.indexOf(c);
+    if(idx[c] < 0) throw new Error('lots 열 없음: ' + c);
+  });
+
+  const lo   = Math.min.apply(null, cols.map(c => idx[c]));
+  const hi   = Math.max.apply(null, cols.map(c => idx[c]));
+  const span = hi - lo + 1;
+
+  inRound.forEach(r => {
+    const rng = sh.getRange(r._row, lo + 1, 1, span);
+    const v = rng.getValues()[0];
+    v[idx.state          - lo] = 'wait';
+    v[idx.current_price  - lo] = cfg.start_price;
+    v[idx.current_holder - lo] = '';
+    v[idx.holder_session - lo] = '';
+    v[idx.bid_count      - lo] = 0;
+    v[idx.close_at       - lo] = '';
+    v[idx.final_price    - lo] = '';
+    rng.setValues([v]);
+  });
+
+  const csh   = sheet_(S_CONFIG);
+  const chead = readTable_(S_CONFIG).head;
+  csh.getRange(cfg._row, colIndex_(chead, 'cycle_no')).setValue(cfg.cycle_no + 1);
+}
+
+/**
+ * 반복 LIVE 자동 전환.
+ * @return {'close'|'open'|'cycle'|'recover'|null}
+ *
+ * 정상 진행은 한 요청에서 한 단계만 전진한다.
+ * 다만 STALE 초과 상태는 아무도 보지 않은 사이클로 간주하고
+ * recover에서 정리 → 새 사이클 LOT1 오픈까지 한 번에 수행한다.
+ */
+function autoAdvance_(cfg){
+  if(!cfg.auto_run) return null;
+
   const cache = CacheService.getScriptCache();
-  const gkey = 'ac_' + cfg.round_id;
-  if(cache.get(gkey)) return false;          // 1초 내 이미 시도함
+  const gkey  = 'adv_' + cfg.round_id;
+  if(cache.get(gkey)) return null;
   cache.put(gkey, '1', 1);
 
   const lots = getLots_(cfg.round_id);
+  if(!lots.length) return null;
+
+  const st  = l => String(l.state).toLowerCase();
   const now = new Date();
-  const expired = lots.filter(l => {
-    if(String(l.state).toLowerCase() !== 'onair') return false;
-    const c = toDate_(l.close_at);
-    return c && now >= c;
-  });
-  if(!expired.length) return false;
+
+  /* 정확히 STALE까지는 정상 진행, STALE 초과부터 recover. */
+  const STALE = (cfg.lot_duration + cfg.intermission) * 1000;
+
+  const onair  = lots.filter(l => st(l) === 'onair')[0];
+  const waits  = lots.filter(l => st(l) === 'wait');
+  const closed = lots.filter(l => st(l) === 'closed');
+  const last   = lastCloseAt_(closed);
+  let action;
+
+  if(onair){
+    const c = toDate_(onair.close_at);
+    if(!c || now < c) return null;
+    action = (now - c > STALE) ? 'recover' : 'close';
+  }else if(waits.length){
+    const due = last ? new Date(last.getTime() + cfg.intermission * 1000) : now;
+    if(now < due) return null;
+    action = (now - due > STALE) ? 'recover' : 'open';
+  }else{
+    const due = last ? new Date(last.getTime() + cfg.cooldown * 1000) : now;
+    if(now < due) return null;
+    action = 'cycle';
+  }
 
   const lock = LockService.getScriptLock();
-  if(!lock.tryLock(2000)) return false;       // 입찰 처리 중이면 다음 폴링에서
+  if(!lock.tryLock(2000)) return null;
   try{
     const sh = sheet_(S_LOTS);
-    const { head, rows } = readTable_(S_LOTS);
-    let changed = false;
+    const t  = readTable_(S_LOTS);
+    const cur = t.rows.filter(r => String(r.round_id) === cfg.round_id)
+                      .sort((a, b) => (num_(a.order_no) || 0) - (num_(b.order_no) || 0));
+    const S = l => String(l.state).toLowerCase();
 
-    expired.forEach(x => {
-      const l = rows.filter(r => r._row === x._row)[0];
-      if(!l || String(l.state).toLowerCase() !== 'onair') return;   // 재확인
+    if(action === 'close'){
+      const l = cur.filter(x => S(x) === 'onair')[0];
+      if(!l) return null;
       const c = toDate_(l.close_at);
-      if(!c || new Date() < c) return;                              // 연장됐으면 취소
+      if(!c || new Date() < c) return null; /* 그 사이 연장됐으면 취소 */
+      closeLotRow_(sh, t.head, l, cfg);
 
-      /* final_price 를 먼저 기록하고 state 를 나중에 닫는다.
-         중간 실패 시 closed 인데 final_price 가 빈 행이 남는 것을 방지한다. */
-      sh.getRange(l._row, colIndex_(head,'final_price'))
-        .setValue(num_(l.current_price) || cfg.start_price);
-      sh.getRange(l._row, colIndex_(head,'state')).setValue('closed');
-      changed = true;
+    }else if(action === 'open'){
+      if(cur.some(x => S(x) === 'onair')) return null;
+      const nx = cur.filter(x => S(x) === 'wait')[0];
+      if(!nx) return null;
+      const lc = lastCloseAt_(cur.filter(x => S(x) === 'closed'));
+      if(lc && new Date() < new Date(lc.getTime() + cfg.intermission * 1000)) return null;
+      openLotRow_(sh, t.head, nx._row, cfg);
 
-      logEvent_({
-        event_type:'lot_closed', lot_no:num_(l.lot_no),
-        amount:num_(l.current_price) || cfg.start_price,
-        nickname:String(l.current_holder || ''), accepted:true,
-        round_id:cfg.round_id, market:cfg.market, currency:cfg.currency
-      });
-    });
+    }else{
+      if(action === 'recover'){
+        const l = cur.filter(x => S(x) === 'onair')[0];
+        if(l){
+          const c = toDate_(l.close_at);
+          if(c && new Date() < c) return null;
+          /* stale LOT은 이전 cycle 소속이므로 이전 cfg/cycle_id로 닫는다. */
+          closeLotRow_(sh, t.head, l, cfg);
+        }
+      }else{
+        if(cur.some(x => S(x) === 'onair' || S(x) === 'wait')) return null;
+        const lc = lastCloseAt_(cur);
+        if(lc && new Date() < new Date(lc.getTime() + cfg.cooldown * 1000)) return null;
+      }
 
-    if(changed){
-      SpreadsheetApp.flush();
-      cache.remove('state_' + cfg.market);
+      resetCycle_(cfg);
+
+      /* cycle_no가 바뀌었으므로 새 cfg를 반드시 다시 읽는다. */
+      const cfg2 = getRound_(cfg.market);
+      const t2   = readTable_(S_LOTS);
+      const first = t2.rows.filter(r => String(r.round_id) === cfg2.round_id)
+                           .sort((a, b) => (num_(a.order_no) || 0) - (num_(b.order_no) || 0))[0];
+      if(!first) return null;
+      openLotRow_(sh, t2.head, first._row, cfg2);
     }
-    return changed;
+
+    SpreadsheetApp.flush();
+    cache.remove('state_' + cfg.market);
+    return action;
   }finally{
     lock.releaseLock();
   }
@@ -336,27 +483,30 @@ function applyMine_(base, sid){
 }
 
 function buildState_(market){
-  const cfg = getRound_(market);
-  autoCloseExpired_(cfg);                     // ← 상태 조회 시마다 만료 LOT 정리
+  let cfg = getRound_(market);
+
+  const adv = autoAdvance_(cfg);
+  if(adv === 'cycle' || adv === 'recover'){
+    cfg = getRound_(market);
+  }
+
+  /* ⚠️ autoAdvance_ 뒤에는 LOT state가 바뀔 수 있으므로 항상 다시 읽는다. */
   const lots = getLots_(cfg.round_id);
   const phase = phaseOf_(cfg, lots);
   const now = new Date();
-
   const cur = lots.filter(l => String(l.state).toLowerCase() === 'onair')[0] || null;
 
-  /* ⚠️ invalid_above / model 은 절대 응답에 넣지 않는다 */
+  /* invalid_above / model 은 절대 응답에 넣지 않는다 */
   const pub = l => ({
-    lot_no      : num_(l.lot_no),
-    display_name: String(l.display_name || ''),
-    image       : String(l.image || ''),
-    state       : String(l.state || 'wait').toLowerCase(),
+    lot_no       : num_(l.lot_no),
+    display_name : String(l.display_name || ''),
+    image        : String(l.image || ''),
+    state        : String(l.state || 'wait').toLowerCase(),
     current_price: num_(l.current_price) || cfg.start_price,
-    bid_count   : num_(l.bid_count) || 0,
-    final_price : num_(l.final_price) || 0,
-    /* 최고가 사용자 닉네임 — 익명 식별자라 노출 무방 */
-    winner : String(l.current_holder || ''),
-    /* ⚠️ _hs 는 서버 내부 판정용. applyMine_() 에서 반드시 제거된다. */
-    _hs    : String(l.holder_session || '')
+    bid_count    : num_(l.bid_count) || 0,
+    final_price  : num_(l.final_price) || 0,
+    winner       : String(l.current_holder || ''),
+    _hs          : String(l.holder_session || '')
   });
 
   let current = null;
@@ -365,8 +515,22 @@ function buildState_(market){
     current = Object.assign(pub(cur), {
       current_holder: String(cur.current_holder || ''),
       close_at      : closeAt ? closeAt.toISOString() : null,
-      seconds_left  : closeAt ? Math.max(0, Math.floor((closeAt - now)/1000)) : null
+      seconds_left  : closeAt ? Math.max(0, Math.floor((closeAt - now) / 1000)) : null
     });
+  }
+
+  const st = l => String(l.state).toLowerCase();
+  const closed = lots.filter(l => st(l) === 'closed');
+  const last   = lastCloseAt_(closed);
+  let nextOpenAt = null;
+  let nextCycleAt = null;
+
+  if(!cur && last){
+    if(lots.some(l => st(l) === 'wait')){
+      nextOpenAt = new Date(last.getTime() + cfg.intermission * 1000).toISOString();
+    }else{
+      nextCycleAt = new Date(last.getTime() + cfg.cooldown * 1000).toISOString();
+    }
   }
 
   return {
@@ -377,12 +541,16 @@ function buildState_(market){
     timezone : cfg.timezone,
     start_price: cfg.start_price,
     min_unit : cfg.min_unit,
-    /* LIVE 원형 게이지의 기준시간. config.lot_duration_sec 원본값을 공개한다. */
     lot_duration: cfg.lot_duration,
-    server_time: nowIso_(),   /* ⚠️ D) 캐시될 수 있으므로 doGet 에서 덮어쓴다 */
+    extend_trigger_sec: cfg.extend_trigger,
+    extend_sec: cfg.extend_sec,
+    intermission_sec: cfg.intermission,
+    cooldown_sec: cfg.cooldown,
+    cycle_id: cfg.cycle_id,
+    next_open_at: nextOpenAt,
+    next_cycle_at: nextCycleAt,
+    server_time: nowIso_(),
     phase: phase,
-    predict_close_at: cfg.predict_close ? cfg.predict_close.toISOString() : null,
-    auction_start_at: cfg.auction_start ? cfg.auction_start.toISOString() : null,
     current_lot: current,
     lots: lots.map(pub)
   };
@@ -420,9 +588,10 @@ function handleSession_(b){
     session_id:b.session_id, event_type:'landing',
     accepted:true, src:b.src, campaign:b.campaign, ua_type:b.ua_type,
     round_id:cfg.round_id, market:cfg.market,
-    locale:b.locale || cfg.locale_default, currency:cfg.currency
+    locale:b.locale || cfg.locale_default, currency:cfg.currency,
+    cycle_id:cfg.cycle_id
   });
-  return { ok:true, round_id:cfg.round_id, market:cfg.market };
+  return { ok:true, round_id:cfg.round_id, market:cfg.market, cycle_id:cfg.cycle_id };
 }
 
 /* ── view — 페이지 진입 (predict_view / view_live / result_view) ── */
@@ -436,9 +605,10 @@ function handleView_(b){
     session_id:b.session_id, nickname:b.nickname, event_type:t,
     accepted:true, src:b.src, campaign:b.campaign, ua_type:b.ua_type,
     round_id:cfg.round_id, market:cfg.market,
-    locale:b.locale || cfg.locale_default, currency:cfg.currency
+    locale:b.locale || cfg.locale_default, currency:cfg.currency,
+    cycle_id:cfg.cycle_id
   });
-  return { ok:true };
+  return { ok:true, cycle_id:cfg.cycle_id };
 }
 
 /* ── predict ── */
@@ -451,7 +621,8 @@ function handlePredict_(b){
     session_id:b.session_id, nickname:b.nickname, event_type:'predict',
     lot_no:b.lot_no, amount:amount, src:b.src, campaign:b.campaign,
     ua_type:b.ua_type, round_id:cfg.round_id, market:cfg.market,
-    locale:b.locale || cfg.locale_default, currency:cfg.currency
+    locale:b.locale || cfg.locale_default, currency:cfg.currency,
+    cycle_id:cfg.cycle_id
   };
 
   if(cfg.predict_close && now >= cfg.predict_close){
@@ -503,19 +674,30 @@ function handlePredict_(b){
 
 /* ── bid ── */
 function handleBid_(b){
-  const cfg = getRound_(b.market);
+  let cfg = getRound_(b.market);
+  const requestCycle = cfg.cycle_id;
   const amount = num_(b.amount);
 
-  const base = {
+  const makeBase = () => ({
     session_id:b.session_id, nickname:b.nickname, event_type:'bid',
     lot_no:b.lot_no, amount:amount, src:b.src, campaign:b.campaign,
     ua_type:b.ua_type, round_id:cfg.round_id, market:cfg.market,
-    locale:b.locale || cfg.locale_default, currency:cfg.currency
-  };
+    locale:b.locale || cfg.locale_default, currency:cfg.currency,
+    cycle_id:cfg.cycle_id
+  });
+
+  let base = makeBase();
   const reject = reason => {
     logEvent_(Object.assign({}, base, { accepted:false, reject_reason:reason }));
     return { ok:false, reason:reason };
   };
+
+  /* ① 클라이언트가 보고 있던 사이클과 현재 서버 사이클을 즉시 비교.
+     옛 화면의 LOT1 입찰이 새 사이클 LOT1로 들어가는 것을 막는다.
+     cycle_id 를 안 보내는 구버전 클라이언트는 하위 호환을 위해 통과시킨다. */
+  if(b.cycle_id && String(b.cycle_id) !== cfg.cycle_id){
+    return reject('cycle_changed');
+  }
 
   /* 레이트 리밋 — 락 밖에서 먼저 */
   const cache = CacheService.getScriptCache();
@@ -528,6 +710,19 @@ function handleBid_(b){
   if(!lock.tryLock(LOCK_WAIT_MS)) return reject('busy');
 
   try{
+    /* ② 락을 기다리는 동안 recover/cycle이 일어났는지 확인.
+       ③ 클라이언트 cycle_id도 fresh cfg와 다시 비교한다. */
+    const freshCfg = getRound_(b.market);
+    if(freshCfg.cycle_id !== requestCycle ||
+       (b.cycle_id && String(b.cycle_id) !== freshCfg.cycle_id)){
+      cfg = freshCfg;
+      base = makeBase();  /* 거절 로그는 실제 현재 사이클로 남긴다 */
+      return reject('cycle_changed');
+    }
+
+    cfg = freshCfg;
+    base = makeBase();
+
     const sh = sheet_(S_LOTS);
     const { head, rows } = readTable_(S_LOTS);
     const lot = rows.filter(r =>
@@ -546,44 +741,61 @@ function handleBid_(b){
     const curPrice = num_(lot.current_price) || cfg.start_price;
     if(amount <= curPrice) return reject('below_current');
 
-    /* invalid_above 가 비어 있으면 상한선 검증을 건너뛴다 */
     const limit = num_(lot.invalid_above);
     if(limit !== null && amount > limit) return reject('over_limit');
 
-    /* ── 통과 ── */
     let newClose = closeAt;
     const leftSec = Math.floor((closeAt - now) / 1000);
-    if(leftSec <= cfg.extend_sec){
+    /* 진입 조건은 extend_trigger(15초 이하), 새 마감은 입찰 시각 + extend_sec(30초).
+       조건을 만족하면 몇 번이든 다시 30초로 갱신된다. 횟수 제한 없음. */
+    if(leftSec <= cfg.extend_trigger){
       newClose = new Date(now.getTime() + cfg.extend_sec * 1000);
     }
 
-    /* ⚠️ A) holder_session 은 필수 열. 열 인덱스를 쓰기 전에 먼저 확인해
-       열이 없을 때 "가격만 갱신되고 승자는 기록 안 됨" 이라는
-       부분 기록 상태가 남지 않게 한다. */
-    const hsCol = colIndex_(head,'holder_session');
-
-    sh.getRange(lot._row, colIndex_(head,'current_price')).setValue(amount);
-    sh.getRange(lot._row, colIndex_(head,'current_holder')).setValue(b.nickname || '');
-    /* 승자 판정은 닉네임이 아니라 session_id 기준 (닉네임 중복 • 변경 대비) */
-    sh.getRange(lot._row, hsCol).setValue(b.session_id || '');
-    sh.getRange(lot._row, colIndex_(head,'bid_count'))
-      .setValue((num_(lot.bid_count) || 0) + 1);
-    sh.getRange(lot._row, colIndex_(head,'close_at'))
-      .setValue(Utilities.formatDate(newClose, cfg.timezone, "yyyy-MM-dd'T'HH:mm:ssXXX"));
+    writeBid_(sh, head, lot, cfg, amount, b.nickname, b.session_id, newClose);
 
     SpreadsheetApp.flush();
-    cache.remove('state_' + cfg.market);   // 즉시 반영
+    cache.remove('state_' + cfg.market);
 
     logEvent_(Object.assign({}, base, { accepted:true }));
     return {
       ok: true,
       current_price: amount,
       close_at: newClose.toISOString(),
-      extended: newClose.getTime() !== closeAt.getTime()
+      extended: newClose.getTime() !== closeAt.getTime(),
+      cycle_id: cfg.cycle_id
     };
   }finally{
     lock.releaseLock();
   }
+}
+
+/**
+ * 입찰 통과 구간 배치 쓰기.
+ * current_price~close_at 범위를 한 번 읽고 한 번 setValues 한다.
+ */
+function writeBid_(sh, head, lot, cfg, amount, nickname, sessionId, newClose){
+  const cols = ['current_price','current_holder','holder_session','bid_count','close_at'];
+  const idx  = {};
+  cols.forEach(c => {
+    idx[c] = head.indexOf(c);
+    if(idx[c] < 0) throw new Error('lots 열 없음: ' + c);
+  });
+
+  const lo   = Math.min.apply(null, cols.map(c => idx[c]));
+  const hi   = Math.max.apply(null, cols.map(c => idx[c]));
+  const span = hi - lo + 1;
+  const rng  = sh.getRange(lot._row, lo + 1, 1, span);
+  const v    = rng.getValues()[0];
+
+  v[idx.current_price  - lo] = amount;
+  v[idx.current_holder - lo] = nickname || '';
+  v[idx.holder_session - lo] = sessionId || '';
+  v[idx.bid_count      - lo] = (num_(lot.bid_count) || 0) + 1;
+  v[idx.close_at       - lo] =
+    Utilities.formatDate(newClose, cfg.timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+
+  rng.setValues([v]);
 }
 
 /* ── admin ── */
@@ -595,69 +807,40 @@ function handleAdmin_(b){
   const cfg = getRound_(b.market);
   const lock = LockService.getScriptLock();
   lock.waitLock(LOCK_WAIT_MS);
+
   try{
     const sh = sheet_(S_LOTS);
     const { head, rows } = readTable_(S_LOTS);
-    const inRound = rows.filter(r => String(r.round_id) === cfg.round_id);
+    const inRound = rows.filter(r => String(r.round_id) === cfg.round_id)
+                        .sort((a,b) => (num_(a.order_no)||0) - (num_(b.order_no)||0));
     const find = no => inRound.filter(r => String(r.lot_no) === String(no))[0];
 
-    const setState = (lot, st) =>
-      sh.getRange(lot._row, colIndex_(head,'state')).setValue(st);
+    const closeLot = lot => closeLotRow_(sh, head, lot, cfg);
+    const openLot  = lot => openLotRow_(sh, head, lot._row, cfg);
 
-    /* ⚠️ C) onair LOT 을 닫을 때는 반드시 final_price 를 먼저 기록한다.
-       state 를 먼저 바꾸면 중간 실패 시 "closed 인데 final_price 비어 있음" 이
-       남아 결과 목록에서 해당 LOT 이 통째로 사라진다. */
-    const closeLot = lot => {
-      sh.getRange(lot._row, colIndex_(head,'final_price'))
-        .setValue(num_(lot.current_price) || cfg.start_price);
-      setState(lot, 'closed');
-      logEvent_({
-        event_type:'lot_closed', lot_no:num_(lot.lot_no),
-        amount:num_(lot.current_price) || cfg.start_price,
-        nickname:String(lot.current_holder || ''), accepted:true,
-        round_id:cfg.round_id, market:cfg.market, currency:cfg.currency
-      });
-    };
-
-    const openLot = lot => {
-      const close = new Date(Date.now() + cfg.lot_duration * 1000);
-      setState(lot, 'onair');
-      sh.getRange(lot._row, colIndex_(head,'close_at'))
-        .setValue(Utilities.formatDate(close, cfg.timezone, "yyyy-MM-dd'T'HH:mm:ssXXX"));
-    };
-
-    /* ⚠️ B) 여기서 바로 return 하지 않는다. 결과만 담아 두고
-       아래 공통 경로(flush → state cache remove)를 반드시 거쳐서 반환한다. */
     let result = { ok:true };
 
     if(b.cmd === 'open'){
       const lot = find(b.lot_no);
       if(!lot) return { ok:false, error:'no_lot' };
-      /* ⚠️ C) 이미 끝난 LOT 재오픈 차단 — final_price 가 덮어써진다 */
       if(String(lot.state).toLowerCase() === 'closed')
         return { ok:false, error:'lot_already_closed' };
-
-      /* ⚠️ C) 진행 중인 LOT 에 open 을 다시 걸어도 타이머를 재시작하지 않는다.
-         버튼 중복 실행 한 번으로 20초 남은 경매가 120초로 되살아나면
-         30초 연장 규칙과 무관한 "관리자 임의 연장" 이 된다.
-         아무것도 쓰지 않았으므로 flush/cache 경로를 거치지 않고 즉시 반환. */
       if(String(lot.state).toLowerCase() === 'onair')
-        return { ok:true, already_open:true, lot_no: num_(lot.lot_no) };
+        return { ok:true, already_open:true, lot_no:num_(lot.lot_no) };
 
       inRound.forEach(r => {
-        if(String(r.state).toLowerCase() !== 'onair') return;
-        closeLot(r);
+        if(String(r.state).toLowerCase() === 'onair') closeLot(r);
       });
       openLot(lot);
       sh.getRange(lot._row, colIndex_(head,'current_price'))
         .setValue(num_(lot.current_price) || cfg.start_price);
-      result = { ok:true, opened: num_(lot.lot_no) };
+      result = { ok:true, opened:num_(lot.lot_no), cycle_id:cfg.cycle_id };
 
     }else if(b.cmd === 'close'){
       const lot = find(b.lot_no);
       if(!lot) return { ok:false, error:'no_lot' };
       closeLot(lot);
-      result = { ok:true, closed: num_(lot.lot_no) };
+      result = { ok:true, closed:num_(lot.lot_no), cycle_id:cfg.cycle_id };
 
     }else if(b.cmd === 'next'){
       const cur = inRound.filter(r => String(r.state).toLowerCase() === 'onair')[0];
@@ -665,25 +848,49 @@ function handleAdmin_(b){
 
       const nxt = inRound.filter(r => String(r.state).toLowerCase() === 'wait')[0];
       if(!nxt){
-        /* 마지막 LOT 을 닫은 직후다. 여기서 바로 return 하면
-           flush 와 캐시 삭제가 건너뛰어져 클라이언트가 ended 로 못 넘어간다. */
-        result = { ok:true, done:true };
+        result = { ok:true, done:true, cycle_id:cfg.cycle_id };
       }else{
         openLot(nxt);
-        result = { ok:true, opened: num_(nxt.lot_no) };
+        result = { ok:true, opened:num_(nxt.lot_no), cycle_id:cfg.cycle_id };
       }
 
     }else if(b.cmd === 'reset'){
-      const hsCol = colIndex_(head,'holder_session');   // ⚠️ A) 필수 열
-      inRound.forEach(r => {
-        setState(r, 'wait');
-        sh.getRange(r._row, colIndex_(head,'current_price')).setValue(cfg.start_price);
-        sh.getRange(r._row, colIndex_(head,'current_holder')).setValue('');
-        sh.getRange(r._row, hsCol).setValue('');
-        sh.getRange(r._row, colIndex_(head,'bid_count')).setValue(0);
-        sh.getRange(r._row, colIndex_(head,'close_at')).setValue('');
-        sh.getRange(r._row, colIndex_(head,'final_price')).setValue('');
+      /* 준비용 reset: cycle_no는 증가시키지 않는다. */
+      const cols = ['state','current_price','current_holder','holder_session',
+                    'bid_count','close_at','final_price'];
+      const idx = {};
+      cols.forEach(c => {
+        idx[c] = head.indexOf(c);
+        if(idx[c] < 0) throw new Error('lots 열 없음: ' + c);
       });
+      const lo = Math.min.apply(null, cols.map(c => idx[c]));
+      const hi = Math.max.apply(null, cols.map(c => idx[c]));
+      const span = hi - lo + 1;
+
+      inRound.forEach(r => {
+        const rng = sh.getRange(r._row, lo + 1, 1, span);
+        const v = rng.getValues()[0];
+        v[idx.state          - lo] = 'wait';
+        v[idx.current_price  - lo] = cfg.start_price;
+        v[idx.current_holder - lo] = '';
+        v[idx.holder_session - lo] = '';
+        v[idx.bid_count      - lo] = 0;
+        v[idx.close_at       - lo] = '';
+        v[idx.final_price    - lo] = '';
+        rng.setValues([v]);
+      });
+      result = { ok:true, reset:true, cycle_id:cfg.cycle_id };
+
+    }else if(b.cmd === 'cycle'){
+      /* 수동 새 사이클 — auto_run=FALSE여도 작동한다. */
+      resetCycle_(cfg);
+      const cfg2 = getRound_(cfg.market);
+      const t2 = readTable_(S_LOTS);
+      const first = t2.rows.filter(r => String(r.round_id) === cfg2.round_id)
+                           .sort((a,b) => (num_(a.order_no)||0) - (num_(b.order_no)||0))[0];
+      if(!first) return { ok:false, error:'no_lot' };
+      openLotRow_(sh, t2.head, first._row, cfg2);
+      result = { ok:true, cycle:cfg2.cycle_no, cycle_id:cfg2.cycle_id, opened:num_(first.lot_no) };
 
     }else{
       return { ok:false, error:'unknown_cmd' };
@@ -779,18 +986,14 @@ function selfTest(){
   const need = {
     events: ['event_id','ts_server','session_id','nickname','event_type','lot_no',
              'amount','accepted','reject_reason','src','campaign','ua_type',
-             'round_id','market','locale','currency'],
-    /* ⚠️ A) holder_session 은 선택 열이 아니라 필수 열이다.
-       applyMine_() 이 닉네임으로 폴백하지 않으므로
-       이 열이 없으면 is_mine 은 누구에게도 뜨지 않는다. */
+             'round_id','market','locale','currency','cycle_id'],
     lots: ['round_id','market','currency','lot_no','display_name','image','order_no',
            'model','invalid_above','start_price','min_unit','state','current_price',
            'current_holder','holder_session','bid_count','close_at','final_price'],
-    predictions: ['round_id','market','currency','session_id','nickname','lot_no',
-                  'predicted_price','ts_server','final_price','diff','rank'],
     config: ['round_id','market','currency','timezone','locale_default','start_price',
              'min_unit','predict_close_at','auction_start_at','lot_duration_sec',
-             'extend_sec','active']
+             'extend_sec','extend_trigger_sec','active','cycle_no','campaign_day',
+             'intermission_sec','cooldown_sec','auto_run']
   };
 
   let ok = true;
@@ -798,31 +1001,87 @@ function selfTest(){
     try{
       const head = readTable_(name).head;
       const miss = need[name].filter(h => head.indexOf(h) < 0);
-      if(miss.length){ ok = false; Logger.log('❌ ' + name + ' 누락 열: ' + miss.join(', ')); }
-      else Logger.log('✅ ' + name);
-    }catch(err){ ok = false; Logger.log('❌ ' + name + ' — ' + err); }
+      if(miss.length){
+        ok = false;
+        Logger.log('❌ ' + name + ' 누락 열: ' + miss.join(', '));
+      }else{
+        Logger.log('✅ ' + name);
+      }
+    }catch(err){
+      ok = false;
+      Logger.log('❌ ' + name + ' — ' + err);
+    }
   });
+
+  /* predictions 는 이번 3일 반복 LIVE에서 미사용 — advisory만 */
+  try{
+    const head = readTable_(S_PRED).head;
+    Logger.log('ℹ️ predictions 보존됨 · 이번 3일 테스트에서는 미사용 · 열 ' + head.length + '개');
+  }catch(err){
+    Logger.log('ℹ️ predictions 확인 생략 · 반복 LIVE에는 영향 없음');
+  }
 
   try{
     const cfg = getRound_('KR');
+    const lots = getLots_(cfg.round_id);
     Logger.log('✅ 활성 라운드: ' + cfg.round_id +
-               ' / 시작 ' + cfg.auction_start +
-               ' / 예측마감 ' + cfg.predict_close);
-    if(!cfg.auction_start || !cfg.predict_close){
+               ' / cycle ' + cfg.cycle_id +
+               ' / LOT ' + cfg.lot_duration + '초' +
+               ' / 연장진입 ' + cfg.extend_trigger + '초 이하' +
+               ' / 연장 +' + cfg.extend_sec + '초' +
+               ' / 사이 ' + cfg.intermission + '초' +
+               ' / 결과 ' + cfg.cooldown + '초');
+    Logger.log(cfg.auto_run
+      ? '⚠️ auto_run=TRUE — 자동 전환 켜짐'
+      : '✅ auto_run=FALSE — 자동 전환 꺼짐');
+    Logger.log('✅ LOT 수: ' + lots.length);
+    if(!lots.length){
       ok = false;
-      Logger.log('❌ config 시각이 비었거나 파싱 실패 — 셀 서식을 "일반 텍스트"로 두세요');
+      Logger.log('❌ 해당 round_id 의 lots 가 0개');
     }
-    Logger.log('✅ LOT 수: ' + getLots_(cfg.round_id).length);
-  }catch(err){ ok = false; Logger.log('❌ config — ' + err); }
+  }catch(err){
+    ok = false;
+    Logger.log('❌ config — ' + err);
+  }
 
   if(!adminToken_()){
-    ok = false; Logger.log('❌ ADMIN_TOKEN 미설정 — setupAdminToken() 을 실행하세요');
+    ok = false;
+    Logger.log('❌ ADMIN_TOKEN 미설정 — setupAdminToken() 을 실행하세요');
   }else{
     Logger.log('✅ ADMIN_TOKEN 설정됨');
   }
 
   Logger.log(ok ? '───── 전체 통과 ─────' : '───── 문제 있음 ─────');
   return ok;
+}
+
+/** 반복 LIVE 사이클 상태 한눈에 확인 */
+function checkCycle(){
+  const cfg  = getRound_('KR');
+  const lots = getLots_(cfg.round_id);
+  const now  = new Date();
+
+  Logger.log('라운드 ' + cfg.round_id + ' / ' + cfg.cycle_id +
+             ' / auto_run=' + cfg.auto_run);
+
+  lots.forEach(l => {
+    const c = toDate_(l.close_at);
+    const left = c ? Math.round((c - now) / 1000) + '초' : '-';
+    Logger.log('LOT ' + l.lot_no +
+      ' | ' + String(l.state).toLowerCase() +
+      ' | 현재가 ' + (num_(l.current_price) || 0) +
+      ' | 남은 ' + left +
+      ' | 세션 ' + (String(l.holder_session || '') || '없음'));
+  });
+
+  const last = lastCloseAt_(lots.filter(l => String(l.state).toLowerCase() === 'closed'));
+  if(last){
+    Logger.log('마지막 마감 ' + last.toISOString());
+    Logger.log('다음 LOT 예정 ' +
+      new Date(last.getTime() + cfg.intermission * 1000).toISOString());
+    Logger.log('다음 사이클 예정 ' +
+      new Date(last.getTime() + cfg.cooldown * 1000).toISOString());
+  }
 }
 
 /** A/B 승자 판정 점검 — 각 LOT 의 holder_session 보존 여부를 눈으로 확인 */
@@ -902,9 +1161,8 @@ function resetAll(){ Logger.log(JSON.stringify(
  *    마지막 LOT 종료와 result.html 진입 사이의 몇 초 차이로
  *    화면이 깨지면 안 된다. 프론트는 status 만 보고 분기하면 된다.
  *
- * ⚠️ 여기서 autoCloseExpired_ 를 호출하지 않는다 (읽기 전용 유지).
- *    만료 LOT 정리는 state 의 책임이므로 result.html 은
- *    state → result 순서로 호출해야 한다.
+ * ⚠️ 여기서 autoAdvance_ 를 호출하지 않는다 (읽기 전용 유지).
+ *    반복 LIVE의 result.html은 action=result를 호출하지 않는다.
  */
 function buildResult_(market, sid){
   const cfg  = getRound_(market);
@@ -1061,125 +1319,4 @@ function testResult(){
     Logger.log((s.indexOf(k) < 0 ? '✅ 미노출 ' : '❌ 노출됨! ') + k);
   });
   return out;
-}
-/* ══════════════════════════════════════════════════════════
- *  debugResultSession() — has_bid 진단 (임시)
- *
- *  Code.gs 맨 아래에 붙여넣고 실행만 하세요.
- *  읽기 전용입니다. 시트에 아무것도 쓰지 않습니다.
- *  진단이 끝나면 이 함수는 지워도 됩니다.
- * ══════════════════════════════════════════════════════════ */
-
-function debugResultSession(){
-
-  /* 세션을 직접 넣고 싶으면 여기에. 비워두면 lots 에서 자동으로 찾습니다. */
-  const SID_OVERRIDE = '';
-
-  const cfg = getRound_('KR');
-  const L = s => Logger.log(s);
-
-  /* ── 0) 대상 세션 ── */
-  const lots = readTable_(S_LOTS).rows
-    .filter(r => String(r.round_id) === String(cfg.round_id));
-  const auto = lots.filter(r => String(r.holder_session || ''))[0];
-  const sid  = SID_OVERRIDE || (auto ? String(auto.holder_session) : '');
-
-  L('══════ 진단 대상 ══════');
-  L('round_id : ' + cfg.round_id);
-  L('session  : ' + (sid || '❌ 없음 — 입찰 기록이 있어야 합니다'));
-  if(!sid) return;
-
-  const won = lots.filter(r =>
-    String(r.state).toLowerCase() === 'closed' &&
-    String(r.holder_session) === sid).length;
-  L('won_lots : ' + won + ' / ' + lots.length);
-
-  /* ── 1) events 실제 헤더 순서 vs logEvent_ 배열 순서 ── */
-  const sh   = sheet_(S_EVENTS);
-  const vals = sh.getDataRange().getValues();
-  const head = vals[0].map(h => String(h).trim());
-
-  /* logEvent_ 의 appendRow 배열이 가정하는 순서 */
-  const LOG_ORDER = ['event_id','ts_server','session_id','nickname','event_type',
-                     'lot_no','amount','accepted','reject_reason','src','campaign',
-                     'ua_type','round_id','market','locale','currency'];
-
-  L('');
-  L('══════ 1) events 열 순서 ══════');
-  L('시트 실제  : ' + head.join(' | '));
-  L('logEvent_ : ' + LOG_ORDER.join(' | '));
-
-  let shifted = [];
-  LOG_ORDER.forEach((name, i) => {
-    if(head[i] !== name) shifted.push(i + '번째: 시트=' + head[i] + ' / 코드=' + name);
-  });
-  L(shifted.length
-    ? '❌ 순서 불일치 ' + shifted.length + '건 — logEvent_ 가 값을 엉뚱한 열에 씁니다\n   ' +
-      shifted.join('\n   ')
-    : '✅ 순서 일치 — 열 밀림은 원인이 아닙니다');
-
-  /* ── 2) 조건을 하나씩 좁히며 어디서 0이 되는지 ── */
-  const iS = head.indexOf('session_id');
-  const iT = head.indexOf('event_type');
-  const iA = head.indexOf('accepted');
-  const iR = head.indexOf('round_id');
-  L('');
-  L('열 위치 : session_id=' + iS + ' event_type=' + iT +
-    ' accepted=' + iA + ' round_id=' + iR);
-
-  /* ⚠️ 여기서 멈추지 않으면 iS=-1 일 때 r[-1] 이 전부 undefined 라
-     아래 필터가 "① = 0" 을 내고, 열 누락을 세션 문제로 오해하게 된다.
-     (round_id 는 없어도 되는 열이라 검사에서 제외) */
-  if(iS < 0 || iT < 0 || iA < 0){
-    L('❌ 필수 열 누락 — selfTest() 부터 실행하세요');
-    return;
-  }
-
-  const rows = vals.slice(1);
-  const c1 = rows.filter(r => String(r[iS]) === sid);
-  const c2 = c1.filter(r => String(r[iT]) === 'bid');
-  const c3 = c2.filter(r => String(r[iA]).toUpperCase() === 'TRUE');
-  const c4 = c3.filter(r => iR < 0 || String(r[iR]) === String(cfg.round_id));
-
-  L('');
-  L('══════ 2) hasAcceptedBid_ 조건별 통과 수 ══════');
-  L('  전체 행                        : ' + rows.length);
-  L('  ① session_id 일치              : ' + c1.length);
-  L('  ② + event_type === "bid"       : ' + c2.length);
-  L('  ③ + accepted 가 TRUE           : ' + c3.length);
-  L('  ④ + round_id 일치  → has_bid   : ' + (c4.length > 0));
-  const fail = c1.length === 0 ? '① session_id'
-             : c2.length === 0 ? '② event_type'
-             : c3.length === 0 ? '③ accepted'
-             : c4.length === 0 ? '④ round_id'
-             : '없음 (has_bid=true 여야 정상)';
-  L('  ▶ 처음 0 이 되는 지점          : ' + fail);
-
-  /* ── 3) 이 세션 행 샘플 (최근 3건) ── */
-  L('');
-  L('══════ 3) 이 세션의 최근 이벤트 3건 ══════');
-  if(!c1.length){
-    L('  ❌ session_id 로 잡히는 행이 0건입니다.');
-    L('  참고 — 시트에 실제로 들어있는 session_id 표본:');
-    rows.slice(-5).forEach(r =>
-      L('    [' + String(r[iS]) + ']  event_type=[' + String(r[iT]) + ']'));
-  }else{
-    c1.slice(-3).forEach(r => {
-      L('  event_type =[' + r[iT] + ']  (type ' + typeof r[iT] + ')');
-      L('  accepted   =[' + r[iA] + ']  (type ' + typeof r[iA] + ')');
-      L('  round_id   =[' + (iR < 0 ? '열없음' : r[iR]) + ']');
-      L('  session_id =[' + r[iS] + ']');
-      L('  ---');
-    });
-  }
-
-  /* ── 4) round 계열 열 이름 확인 ── */
-  L('');
-  L('══════ 4) round 관련 열 이름 ══════');
-  L('  ' + (head.filter(h => h.toLowerCase().indexOf('round') >= 0).join(', ') || '없음'));
-
-  /* ── 5) 현재 실제 응답 ── */
-  L('');
-  L('══════ 5) buildResult_ 실제 반환 ══════');
-  L(JSON.stringify(buildResult_('KR', sid).my_result));
 }
