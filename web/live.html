@@ -69,6 +69,7 @@ img{display:block;max-width:100%}
 .foot{padding:40px 0 calc(60px + env(safe-area-inset-bottom));
   border-top:1px solid var(--line);text-align:center}
 .foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.4;white-space:nowrap}
+.foot .auto{color:var(--lime);font-weight:700;font-size:11.5px}
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--lime);outline-offset:3px}
@@ -253,7 +254,7 @@ img{display:block;max-width:100%}
       <div class="holder" id="holder"></div>
     </div>
 
-    <div class="ext" id="ext">막판 입찰 · 30초 연장되었습니다</div>
+    <div class="ext" id="ext">막판 입찰 · 연장되었습니다</div>
 
     <!-- 입찰창 — 현재가 바로 아래. 고정 바가 아니라 흐름 안의 카드다. -->
     <div class="bidbar hidden" id="bidbar">
@@ -286,16 +287,12 @@ img{display:block;max-width:100%}
         <div class="st" id="nextStart"></div>
       </div>
 
+      <!-- 다음 LOT / 다음 사이클까지 남은 초. 반복 LIVE 에서는 항상 짧다. -->
       <div class="startcd hidden" id="startcd">
-        <div class="t" id="startT">--<i>:</i>--<i>:</i>--</div>
-        <div class="lab" id="startLab">START</div>
+        <div class="t" id="startT">--</div>
+        <div class="lab" id="startLab">SEC</div>
       </div>
-
-      <a class="go hidden" id="goPredict" href="predict.html">예상 최종가 적으러 가기 →</a>
     </div>
-
-    <!-- 회차 종료 후에만 — 성적/등급은 result.html 이 유일 기준 -->
-    <a class="go hidden" id="goResult" href="result.html">오늘의 결과 보기 →</a>
   </section>
 
   <!-- 종료된 LOT -->
@@ -310,6 +307,7 @@ img{display:block;max-width:100%}
 
 <footer class="foot"><div class="wrap">
   <div class="logo"><b>동네</b>옥션</div>
+  <p class="auto">입찰 1회 이상이면 커피 추첨에 자동 참여됩니다</p>
   <p>모의경매 · 실제 상품 판매가 아닙니다 · 결제·배송 없음</p>
 </div></footer>
 
@@ -318,15 +316,21 @@ img{display:block;max-width:100%}
 const RING_PATH = 100; /* SVG pathLength=100 — dashoffset을 %처럼 직접 쓴다 */
 let warnedMissingDuration = false;
 let STATE = null;
+/* 대기 화면 카운트다운 목표 — render 가 서버 값(next_open_at / next_cycle_at)으로 세팅 */
+let cdTarget = null;
 let LOT = null;          // 현재 진행 LOT
 let lastPrice = 0;
 /* 연장 알림 — 모든 창이 동일하게 close_at 변화로만 판정한다.
    close_at 은 서버가 실제로 연장했을 때만 커지므로 그 자체가 연장 이벤트 ID 역할을 한다.
    LOT 이 바뀌면 추적을 초기화하고, 그 LOT 을 처음 본 시점의 값은 기준선으로만 쓴다
    (이미 연장된 상태로 진입한 사람에게 지난 연장을 뒤늦게 띄우지 않기 위해). */
-let extTrack = { lot: null, closeAt: null };
+/* ⚠️ 추적키에 cycle_id 가 반드시 들어가야 한다.
+   사이클이 바뀌면 lot_no 는 다시 1 로 돌아오고, 새 LOT1 의 close_at 은
+   이전 사이클 LOT1 보다 항상 크다. cycle 을 안 보면 사이클 시작을 연장으로 오인한다. */
+let extTrack = { cycle: null, lot: null, closeAt: null };
 let sending = false;
-const wonLots = new Set();   /* 이미 알린 LOT */
+/* ⚠️ 키는 cycle_id + lot_no. lot_no 만 쓰면 다음 사이클의 같은 LOT 최고가를 알리지 못한다 */
+const wonLots = new Set();   /* 이미 알린 "cycle:lot" */
 
 /* ⚠️ 등급 계산은 여기 없다. result.html 한 곳에서만 한다.
    과거 이 파일에 있던 tierOf() 는 확정 등급표와 어긋났다:
@@ -344,6 +348,8 @@ function isMine(l){
 const poller = createPoller(refresh);
 
 /* ══════ 폴링 ══════ */
+let viewTracked = false;
+
 async function refresh(){
   const s = await apiGet();
   if(!s.ok) return;
@@ -352,6 +358,15 @@ async function refresh(){
   setMinUnit(s.min_unit);
   STATE = s;
   render(s);
+
+  /* ⚠️ view_live 는 반드시 첫 state 를 받은 뒤에 찍는다.
+     무관중 30분 뒤 첫 방문자의 state 요청이 recover 를 일으켜 새 사이클을 만든다.
+     init 에서 미리 찍으면 그 사용자가 이전 사이클(D1-C007)의 방문자로 기록되고,
+     정작 참여하는 사이클(D1-C008)의 LIVE→입찰 전환이 틀어진다. */
+  if(!viewTracked){
+    viewTracked = true;
+    trackView("view_live");
+  }
 }
 
 function render(s){
@@ -369,8 +384,14 @@ function render(s){
     poller.setInterval(CONFIG.POLL.live);
   }else{
     stEl.classList.remove("live");
-    stTxt.textContent = { predict:"접수 중", closing:"곧 시작", standby:"대기 중", ended:"종료" }[s.phase] || "";
-    poller.setInterval(CONFIG.POLL.idle);
+    stTxt.textContent = { intermission:"다음 상품", ended:"사이클 종료", idle:"준비 중" }[s.phase] || "";
+    /* 10초 인터미션/결과 구간은 lazy autoAdvance_의 트리거이므로
+       15초 idle 폴링을 쓰면 실제 전환이 늦어진다. 짧은 구간만 hot 폴링. */
+    poller.setInterval(
+      (s.phase === "intermission" || s.phase === "ended")
+        ? CONFIG.POLL.hot
+        : CONFIG.POLL.idle
+    );
   }
 
   /* 진행 화면 */
@@ -380,7 +401,7 @@ function render(s){
     $("#wait").classList.add("hidden");
     $("#bidbar").classList.remove("hidden");
 
-    $("#lotno").textContent = "LOT " + pad(cur.lot_no);
+    $("#lotno").textContent = "LOT " + pad(cur.lot_no) + " / " + s.lots.length;
     $("#name").textContent  = cur.display_name;
 
     const img = $("#photo");
@@ -403,7 +424,7 @@ function render(s){
 
     const h = $("#holder");
     if(cur.current_holder){
-      const mine = cur.current_holder === SESSION.nickname;
+      const mine = isMine(cur);
       h.className = "holder" + (mine ? " mine" : "");
       h.innerHTML = mine ? "<b>내가 최고가입니다</b>" : "<b>" + esc(cur.current_holder) + "</b> 님이 최고가";
     }else{
@@ -413,8 +434,8 @@ function render(s){
     /* ⚠️ bid_count 는 서버 필드로 유지하되 화면에는 표시하지 않는다 — 연타 유도 방지 */
 
     /* 연장 감지 — 입찰한 사람이든 보고만 있는 사람이든 같은 경로로 정확히 1회 */
-    if(extTrack.lot !== cur.lot_no){
-      extTrack = { lot: cur.lot_no, closeAt: cur.close_at };      // 기준선만 잡고 표시 안 함
+    if(extTrack.cycle !== s.cycle_id || extTrack.lot !== cur.lot_no){
+      extTrack = { cycle: s.cycle_id, lot: cur.lot_no, closeAt: cur.close_at };  // 기준선만
     }else if(cur.close_at && extTrack.closeAt &&
              new Date(cur.close_at) > new Date(extTrack.closeAt)){
       extTrack.closeAt = cur.close_at;                            // 같은 연장 반복 표시 방지
@@ -432,15 +453,15 @@ function render(s){
 
     const t = $("#waitTitle"), d = $("#waitDesc");
     const nx = s.lots.filter(l => l.state === "wait").sort((a,b) => a.lot_no - b.lot_no)[0];
+    /* ── 반복 LIVE 의 대기 화면 ──
+       phase 는 intermission(다음 LOT) 또는 ended(사이클 결과) 둘 중 하나다.
+       ⚠️ 9시·예측 관련 분기는 전부 제거됐다. 되살리지 말 것. */
     const ended = s.phase === "ended";
-    /* 하나라도 끝났으면 = LOT 사이 대기 (최초 시작 전이 아님) */
-    const between = s.lots.some(l => l.state === "closed");
 
-    /* 다음 LOT 미리보기 */
+    /* 다음 LOT 미리보기 — 인터미션에서만 */
     if(nx && !ended){
       $("#nextlot").classList.remove("hidden");
-      $("#nextlot").querySelector(".en").textContent =
-        between ? "NEXT LOT " + pad(nx.lot_no) : "FIRST LOT";
+      $("#nextlot").querySelector(".en").textContent = "NEXT LOT " + pad(nx.lot_no);
       const im = $("#nextImg"), src2 = CONFIG.IMG_DIR + nx.image;
       if(im.getAttribute("src") !== src2){
         im.style.display = "";
@@ -453,32 +474,22 @@ function render(s){
       $("#nextlot").classList.add("hidden");
     }
 
-    /* 시작 카운트다운 — 최초 대기(예측/마감 단계)에서만 노출 */
-    const showCd = !ended && !between && s.phase !== "standby";
-    $("#startcd").classList.toggle("hidden", !showCd);
-    if(showCd) $("#startLab").textContent = fmtTime(s.auction_start_at) + " START";
-    $("#goPredict").classList.toggle("hidden", s.phase !== "predict");
+    /* 카운트다운 — 서버가 준 next_open_at / next_cycle_at 만 쓴다.
+       ⚠️ 클라이언트가 초를 세어 만들지 않는다. 연장·복구로 서버가 언제든 바꾼다. */
+    const target = ended ? s.next_cycle_at : s.next_open_at;
+    $("#startcd").classList.toggle("hidden", !target);
+    cdTarget = target || null;
 
     if(ended){
-      t.textContent = "오늘 경매가 끝났습니다";
-      /* ⚠️ 다음 회차가 config 에 없는데 날짜를 약속하지 않는다.
-         (없는 약속은 재방문율 지표를 직접 오염시킨다) */
-      d.innerHTML = "오늘의 최종가와 예측왕을 결과에서 확인하세요.";
-    }else if(between){
-      /* LOT 사이 — 다음 상품으로 붙잡아둔다 */
+      t.textContent = "이번 사이클 종료";
+      d.textContent = "곧 처음부터 다시 시작합니다.";
+      $("#startLab").textContent = "다음 경매";
+    }else{
       t.textContent = "다음 상품 준비 중";
       d.textContent = "잠시 후 시작합니다.";
-    }else if(s.phase === "standby"){
-      t.textContent = "곧 시작합니다";
-      d.textContent = "첫 상품이 올라오는 중입니다.";
-    }else{
-      t.textContent = fmtTime(s.auction_start_at) + " 시작";
-      d.innerHTML = "전부 1,000원에서 출발합니다.<br>얼마까지 갈지는 들어온 사람들이 정합니다.";
+      $("#startLab").textContent = "다음 상품";
     }
   }
-
-  /* 회차 종료 시 결과 화면으로 넘긴다. 성적·등급은 여기서 계산하지 않는다. */
-  $("#goResult").classList.toggle("hidden", s.phase !== "ended" || !s.lots.length);
 
   /* 종료된 LOT */
   const done = s.lots.filter(l => String(l.state).toLowerCase() === "closed" && l.final_price > 0)
@@ -486,8 +497,9 @@ function render(s){
 
   /* 내가 최고가로 종료된 LOT 이 새로 생기면 알린다 */
   done.forEach(l => {
-    if(isMine(l) && !wonLots.has(l.lot_no)){
-      wonLots.add(l.lot_no);
+    const wkey = s.cycle_id + ":" + l.lot_no;
+    if(isMine(l) && !wonLots.has(wkey)){
+      wonLots.add(wkey);
       toast("LOT " + pad(l.lot_no) + " 최고가 확정 · " + money(l.final_price), "ok");
     }
   });
@@ -565,7 +577,15 @@ async function sendBid(amount){
   $$(".quick button").forEach(b => b.disabled = true);
 
   try{
-    const r = await apiPost("bid", { lot_no: LOT.lot_no, amount: amount });
+    /* ⚠️ cycle_id 를 반드시 함께 보낸다.
+       사이클이 넘어간 뒤 옛 화면에서 누르면 lot_no 만으로는 새 사이클의
+       같은 번호 LOT 에 입찰이 들어간다 (LOT1 은 매 사이클 다시 생긴다).
+       서버가 cycle_id 를 대조해 cycle_changed 로 거절한다. */
+    const r = await apiPost("bid", {
+      lot_no  : LOT.lot_no,
+      amount  : amount,
+      cycle_id: STATE && STATE.cycle_id
+    });
     if(r.ok){
       $("#amt").value = "";
       $$(".quick button").forEach(x => x.classList.remove("on"));
@@ -619,17 +639,11 @@ function updateRing(left, lot){
 
 /* ══════ 로컬 타이머 (서버 시간 기준) ══════ */
 setInterval(() => {
-  /* 대기 화면 — 21:00 까지 */
-  if(!LOT && STATE && STATE.auction_start_at){
-    const l = secondsUntil(STATE.auction_start_at);
+  /* 대기 화면 — 다음 LOT / 다음 사이클까지. 항상 10초 안팎이라 초만 보여준다. */
+  if(!LOT && cdTarget){
+    const l = secondsUntil(cdTarget);
     const el = $("#startT");
-    if(l !== null && el){
-      let x = Math.max(0, Math.floor(l));
-      const dd = Math.floor(x / 86400); x %= 86400;
-      const hh = Math.floor(x / 3600);  x %= 3600;
-      el.innerHTML = (dd > 0 ? dd + "<i>d</i> " : "")
-        + pad(hh) + "<i>:</i>" + pad(Math.floor(x / 60)) + "<i>:</i>" + pad(x % 60);
-    }
+    if(l !== null && el) el.textContent = Math.max(0, Math.ceil(l));
   }
   if(!LOT || !LOT.close_at) return;
   const left = secondsUntil(LOT.close_at);
@@ -638,16 +652,19 @@ setInterval(() => {
 
   /* 판정은 전부 서버 close_at + server_time 오프셋(secondsUntil). 여기서는 표시만 한다. */
   $("#clock").textContent = s > 0 ? s : "마감";
+  /* ⚠️ hot 임계는 연장 규칙과 같아야 한다. 서버 extend_sec 을 그대로 쓴다.
+     60초 LOT + 15초 연장에서 30초 hot 은 절반이 빨갛게 된다. */
+  const hotSec = (STATE && Number(STATE.extend_sec)) || 15;
   $("#timer").className = "timer"
-    + (s <= 0            ? " over"   : "")
-    + (s <= 30 && s > 0  ? " hot"    : "")
-    + (s <= 10 && s > 0  ? " urgent" : "");
+    + (s <= 0                 ? " over"   : "")
+    + (s <= hotSec && s > 0   ? " hot"    : "")
+    + (s <= 5 && s > 0        ? " urgent" : "");
 
   /* 진행 게이지 — 서버 close_at 기준 left를 시각화만 한다. */
   updateRing(left, LOT);
 
   /* 막판엔 폴링을 조인다 */
-  poller.setInterval(s <= 30 ? CONFIG.POLL.hot : CONFIG.POLL.live);
+  poller.setInterval(s <= hotSec ? CONFIG.POLL.hot : CONFIG.POLL.live);
 }, 250);
 
 /* ══════ 시작 ══════ */
@@ -659,7 +676,7 @@ setInterval(() => {
     return;
   }
   if(!SESSION.nickname) setNickname(makeNickname());
-  trackView("view_live");
+  /* view_live 는 refresh() 안에서 첫 state 수신 후 1회 호출한다 */
   poller.setInterval(CONFIG.POLL.live);
   poller.start();
 })();

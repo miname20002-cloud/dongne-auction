@@ -5,444 +5,55 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a09">
 <meta name="format-detection" content="telephone=no">
-<title>오늘의 결과 — 동네옥션</title>
+<title>경품 안내 — 동네옥션</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-/* ═══════════════════════════════════════════════════════════
-   ⚠️ 이 :root 블록만 live.html 것으로 통째 교체하면 색이 맞습니다.
-      --bg 외 값은 live.html 미확인분에 대한 [추정]입니다.
-      아래 CSS는 전부 이 변수만 참조하므로 다른 곳은 손댈 필요 없습니다.
-   ═══════════════════════════════════════════════════════════ */
-:root{
-  --bg:#0a0a09;--panel:#131312;--panel2:#191918;
-  --text:#f4f4ef;--muted:#a09f98;--dim:#696963;--line:#292927;
-  --lime:#dfff20;--live:#ff4d4d;--sold:#ff7a00;
-}
-
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:Pretendard Variable,Pretendard,-apple-system,system-ui,sans-serif;
-  font-size:15px;line-height:1.6;letter-spacing:-.01em;
-  -webkit-font-smoothing:antialiased;
-  padding:0 16px calc(36px + env(safe-area-inset-bottom));
-}
-.wrap{max-width:440px;margin:0 auto}
-.num,.eyebrow,.tier,.lotno{font-family:Archivo,sans-serif;font-variant-numeric:tabular-nums}
-.eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
-
-/* ── 헤더 ── */
-header{padding:16px 0 4px;display:flex;align-items:center;justify-content:space-between}
-/* 로고 색은 live.html 과 동일 규칙 — 동네=라임 / 옥션=본문색 */
-.brand{font-size:13px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
-.brand b{color:var(--lime)}
-
-/* ── 패널 ── */
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
-.sec{margin-top:22px}
-.sec>h2{margin:0 0 9px;font-size:12px;font-weight:800;color:var(--muted)}
-
-/* ── 성적 + 등급 (한 카드) ──
-   ⚠️ 카드를 둘로 나누면 390px 에서 등급이 첫 화면 밖으로 밀린다 */
-.card1{padding:14px 16px 12px;text-align:center}
-.score{display:flex;align-items:baseline;justify-content:center;gap:3px;margin:5px 0 1px;line-height:1}
-.score .mine{font-family:Archivo,sans-serif;font-weight:900;font-size:56px;letter-spacing:-.045em;color:var(--lime)}
-.score .of{font-family:Archivo,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--dim)}
-.card1.zero .mine{color:var(--text)}
-.cap{font-size:12px;color:var(--muted);font-weight:600}
-
-.hr{height:1px;background:var(--line);margin:9px -16px 0}
-.tierrow{padding-top:8px;text-align:left}
-.tier{font-weight:900;font-size:24px;letter-spacing:-.02em;color:var(--lime);line-height:1}
-.tier.low{color:var(--text)}
-.tiermsg{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.45}
-.tiermsg b{display:block;color:var(--text);font-weight:700;font-size:12.5px}
-.tiergoal{margin-top:2px;color:var(--dim);font-size:10.5px}
-
-/* 등급 레일은 의미가 모호해 제거. */
-
-/* ── LOT ── */
-.lot{display:flex;gap:12px;align-items:center;background:var(--panel);
-  border:1px solid var(--line);border-radius:14px;padding:11px;margin-bottom:8px}
-.lot.win{border-color:rgba(223,255,32,.72);background:var(--panel2)}
-.lot.dimmed{opacity:.72}
-.thumb{width:58px;height:58px;flex:0 0 58px;border-radius:10px;overflow:hidden;
-  background:var(--panel2);display:flex;align-items:center;justify-content:center}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.noimg{font-size:9px;color:var(--dim);text-align:center;padding:4px;line-height:1.3}
-.lotmeta{flex:1;min-width:0}
-.lotno{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--dim)}
-.nm{font-size:13.5px;font-weight:700;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fin{font-size:11.5px;color:var(--muted)}
-.fin b{font-family:Archivo,sans-serif;font-weight:800;font-size:14.5px;color:var(--text);
-  letter-spacing:-.01em;margin-left:5px}
-.badge{flex:0 0 auto;align-self:center;font-size:10.5px;font-weight:800;color:var(--lime);
-  text-align:right;line-height:1.2;white-space:nowrap}
-
-/* ── 내가 지킨 상품 / 전체 최종가 접기 ── */
-.mine-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
-.mine-head h2{margin:0;font-size:12px;font-weight:800;color:var(--muted)}
-.mine-count{font-family:Archivo,sans-serif;font-size:10.5px;font-weight:800;color:var(--lime);letter-spacing:.08em}
-.all-toggle{width:100%;margin-top:8px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
-.all-toggle:active{transform:scale(.99)}
-.all-wrap{margin-top:9px}
-
-/* ── 예측왕 ── */
-.who{display:block;margin-bottom:12px}
-.nick{font-size:19px;font-weight:800;letter-spacing:-.02em}
-.kingmeta{margin-top:4px;font-size:10.5px;color:var(--dim);font-family:Archivo,sans-serif;letter-spacing:.04em}
-.kingprize{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
-.kingprize b{color:var(--sold);font-weight:900}
-.lotref{font-size:11px;color:var(--dim);font-family:Archivo,sans-serif;letter-spacing:.06em}
-.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px}
-.kv+.kv{border-top:1px solid var(--line)}
-.kv span{color:var(--muted)}
-.kv b{font-family:Archivo,sans-serif;font-weight:800;letter-spacing:-.01em}
-.kv.diff b{color:var(--lime)}
-.empty{color:var(--dim);font-size:13px;text-align:center;padding:6px 0}
-
-/* ── 다음 회차 ── */
-.next{text-align:center;padding:14px 18px}
-.cd{font-family:Archivo,sans-serif;font-weight:900;font-size:38px;letter-spacing:-.02em;
-  color:var(--sold);margin:9px 0 3px;font-variant-numeric:tabular-nums}
-.cd.off{font-size:21px;color:var(--muted)}
-.when{font-size:13px;color:var(--muted);font-weight:600}
-.when-day{margin-top:9px;font-size:15px;color:var(--text);font-weight:700;letter-spacing:-.01em}
-.when-day+.cd{margin-top:4px}
-.cta{display:block;width:100%;margin-top:16px;padding:15px;background:var(--lime);
-  color:#0a0a09;border:0;border-radius:12px;font-family:inherit;font-size:15px;
-  font-weight:800;letter-spacing:-.01em;cursor:pointer}
-.cta.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.cta:active{transform:scale(.985)}
-.cta:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
-
-.notice{margin-top:18px;padding:0;border:0;border-radius:0;
-  text-align:center;font-size:11px;color:var(--dim);line-height:1.5}
-
-/* ── 대기 / 오류 ── */
-.wait{text-align:center;padding:64px 20px}
-.wait .msg{font-size:15px;font-weight:700;color:var(--text)}
-.wait p{margin:7px 0 0;font-size:13px;color:var(--dim)}
-.spin{width:24px;height:24px;margin:0 auto 16px;border-radius:50%;
-  border:2px solid var(--line);border-top-color:var(--lime);animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){
-  .spin{animation:none;border-top-color:var(--muted)}
-  .cta:active{transform:none}
-}
-.hide{display:none!important}
-
-.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
-  background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;
-  padding:11px 16px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;
-  transition:.18s;z-index:99;max-width:90vw}
-.toast.show{opacity:1;transform:translate(-50%,0)}
+:root{--bg:#0a0a09;--panel:#131312;--panel2:#191918;--text:#f4f4ef;--muted:#a09f98;--dim:#696963;--line:#292927;--lime:#dfff20;--live:#ff4d4d;--sold:#ff7a00}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:Pretendard Variable,Pretendard,-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.6;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding:0 16px calc(40px + env(safe-area-inset-bottom))}.wrap{max-width:440px;margin:0 auto}.eyebrow{font:800 10.5px Archivo,sans-serif;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}header{padding:18px 0 6px;display:flex;align-items:center;justify-content:space-between}.logo{font-size:15px;font-weight:800;letter-spacing:-.04em}.logo b{color:var(--lime)}.tag{font:800 10px Archivo,sans-serif;letter-spacing:.14em;color:var(--dim)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:14px}h1{margin:22px 0 6px;font-size:26px;line-height:1.25;letter-spacing:-.045em;font-weight:800}.sub{color:var(--muted);font-size:13.5px;line-height:1.75}.how{list-style:none;margin:0;padding:0}.how li{display:grid;grid-template-columns:22px 1fr;gap:12px;padding:12px 0}.how li+li{border-top:1px solid var(--line)}.how i{font:900 11px Archivo,sans-serif;color:var(--dim);font-style:normal;padding-top:4px}.how b{display:block;font-size:15px;font-weight:800;letter-spacing:-.03em}.how p{margin:4px 0 0;color:var(--dim);font-size:12.5px;line-height:1.6}.how em{font-style:normal;color:var(--lime);font-weight:800}.notice-box{color:var(--muted);font-size:13px;line-height:1.8}.notice-box b{color:var(--text)}.code{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 13px;margin:14px 0 12px}.code span{font-size:11px;color:var(--dim);font-weight:700;white-space:nowrap}.code b{font:800 13px Archivo,sans-serif;color:var(--lime);letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis}.cta{display:block;width:100%;padding:15px;border-radius:12px;text-align:center;font-size:15px;font-weight:800;letter-spacing:-.02em;text-decoration:none;border:0;cursor:pointer;font-family:inherit;box-sizing:border-box}.cta.lime{background:var(--lime);color:#0a0a09}.cta.ghost{background:transparent;color:var(--text);border:1px solid var(--line);margin-top:10px}.cta:active{transform:scale(.985)}.cta:focus-visible{outline:2px solid var(--lime);outline-offset:3px}.hidden{display:none!important}.winner-list{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.winner-list li{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:800 13px Archivo,sans-serif;color:var(--lime);letter-spacing:-.01em;text-align:center}.foot{margin-top:26px;padding:16px 0 0;border-top:1px solid var(--line);text-align:center;color:var(--dim);font-size:11.5px;line-height:1.8}@media(prefers-reduced-motion:reduce){.cta:active{transform:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <header>
-    <div class="brand"><b>동네</b>옥션</div>
-    <!-- ⚠️ round_id(KR-R1)는 운영 식별자다. 응답에는 그대로 있지만 화면에는 내지 않는다.
-         "ROUND 1" 같은 다른 문구로 치환해서 다시 노출하지도 않는다. -->
-  </header>
-
-  <!-- ══ 대기 ══ -->
-  <section id="waitView" class="wait">
-    <div class="spin"></div>
-    <div class="msg" id="waitMsg">결과를 정리하고 있어요</div>
-    <p id="waitSub">잠시만 기다려주세요</p>
-    <button class="cta ghost hide" id="retryBtn" style="max-width:220px;margin:20px auto 0">
-      결과 새로고침
-    </button>
+  <header><div class="logo"><b>동네</b>옥션</div><div class="tag">PRIZE</div></header>
+  <h1>경품 안내</h1>
+  <p class="sub">모의경매 참여자에게 커피 쿠폰을 드립니다.<br>따로 응모할 필요는 없습니다.</p>
+  <section class="panel">
+    <div class="eyebrow">참여 방식</div>
+    <ol class="how" style="margin-top:10px">
+      <li><i>01</i><div><b>입찰 1회 이상</b><p><em>자동으로</em> 커피 추첨에 참여됩니다. 응모 버튼을 누를 필요가 없습니다.</p></div></li>
+      <li><i>02</i><div><b>추첨 10명</b><p>여러 상품에 입찰해도 추첨권은 1인 1개입니다.</p></div></li>
+      <li><i>03</i><div><b>당첨자만 경품 신청</b><p>발표 후 아래에서 신청하면 기프티콘을 보내드립니다.</p></div></li>
+    </ol>
   </section>
-
-  <!-- ══ 결과 ══ -->
-  <main id="resultView" class="hide">
-
-    <!-- 1스크린: 오늘의 결과 → 3 / 5 → 등급 -->
-    <section class="panel card1" id="card1">
-      <div class="eyebrow">오늘의 결과</div>
-      <div class="score">
-        <span class="mine" id="wonN">0</span><span class="of" id="totalN">/ 0</span>
-      </div>
-      <div class="cap">내가 최고가였던 상품</div>
-
-      <div class="hr"></div>
-      <div class="tierrow">
-        <div class="tier" id="tierName">WATCHER</div>
-        <div class="tiermsg" id="tierMsg"></div>
-      </div>
-    </section>
-
-    <section class="sec">
-      <div class="mine-head">
-        <h2>내가 지킨 상품</h2>
-        <span class="mine-count" id="mineCount">0개</span>
-      </div>
-      <div id="mineList"></div>
-      <button class="all-toggle hide" id="allToggle" type="button">전체 최종가 보기 ↓</button>
-      <div class="all-wrap hide" id="allWrap"><div id="lotList"></div></div>
-    </section>
-
-    <section class="sec">
-      <h2>오늘의 예측왕</h2>
-      <div class="panel" id="kingBox"></div>
-    </section>
-
-    <section class="sec">
-      <div class="panel next" id="nextBox"></div>
-    </section>
-
-    <div class="notice">모의경매 · 실제 상품 판매가 아닙니다 · 결제·배송 없음</div>
-
-  </main>
+  <!-- 추첨 후 <li> 10개 입력하고 hidden만 제거 -->
+  <section class="panel hidden" id="winners">
+    <div class="eyebrow">커피 쿠폰 당첨자</div>
+    <ul class="winner-list"><!-- <li>익명3103</li> --></ul>
+  </section>
+  <section class="panel">
+    <div class="eyebrow">당첨자 발표</div>
+    <p class="notice-box" style="margin-top:10px">캠페인 종료 후 <b>이 화면과 공지</b>를 통해 안내합니다.<br>발표일로부터 <b>7일 이내</b> 신청하지 않으면 당첨 권리가 소멸합니다.</p>
+  </section>
+  <section class="panel">
+    <div class="eyebrow">경품 신청</div>
+    <p class="notice-box" style="margin-top:10px">아래 코드는 <b>내 화면에만</b> 표시됩니다.<br>신청 시 그대로 입력해주세요. 참여 기록 대조 후 지급합니다.</p>
+    <div class="code"><span>수령 확인 코드</span><b id="claimCode">—</b></div>
+    <a class="cta lime" id="claimBtn" href="#" target="_blank" rel="noopener">경품 신청 →</a>
+    <a class="cta ghost" href="live.html">다시 경매 참여하기 →</a>
+  </section>
+  <p class="foot">모의경매 · 실제 상품 판매가 아닙니다.<br>결제·배송은 발생하지 않습니다.</p>
 </div>
-
 <script src="js/common.js"></script>
 <script>
-/* ═══════════════════════════════════════════════════════════
-   result.html — 회차 결과
-   state (LOT 목록 · is_mine) + result (등급 · 예측왕 · 다음 회차)
-
-   ⚠️ 호출 순서 state → result 고정.
-      state 가 autoCloseExpired_ 로 마지막 LOT 마감을 확정시킨 뒤
-      읽기 전용인 result 가 그 결과를 읽는다. 순서가 바뀌면
-      마지막 LOT 이 안 닫혀 계속 pending 이 나온다.
-   ═══════════════════════════════════════════════════════════ */
-
-const RETRY_MAX = 5;          // pending 재시도 상한 — 무한 폴링 금지
-const RETRY_MS  = 3000;
-const PRIZE     = '3만원';     // 예측왕 상금 (표시용 · 규정 바뀌면 여기 한 줄)
-
-let attempt = 0;
-let cdTimer = null;
-
-/* ── 등급 ─────────────────────────────────────────────
-   ⚠️ 정수 산술. won/total 실수 비교는 3/5=60% 같은 경계에서
-      부동소수 오차로 등급이 한 칸 밀릴 수 있다.               */
-const TIERS = ['WATCHER','ROOKIE','BIDDER','HUNTER','ACE','SWEEP'];
-
-function tierOf(hasBid, won, total){
-  if(won > 0){
-    if(won >= total)         return 'SWEEP';
-    if(won * 10 > total * 6) return 'ACE';
-    if(won * 10 > total * 4) return 'HUNTER';
-    return 'BIDDER';
-  }
-  return hasBid ? 'ROOKIE' : 'WATCHER';
-}
-
-/** 다음 목표 — SWEEP 이면 null */
-function nextGoal(tier, total){
-  switch(tier){
-    case 'WATCHER': return '다음 목표 ROOKIE · 입찰 1회';
-    case 'ROOKIE' : return '다음 목표 BIDDER · 최고가 1개';
-    case 'BIDDER' : return '다음 목표 HUNTER · 최고가 ' + (Math.floor(total*4/10)+1) + '개';
-    case 'HUNTER' : return '다음 목표 ACE · 최고가 ' + (Math.floor(total*6/10)+1) + '개';
-    case 'ACE'    : return '다음 목표 SWEEP · ' + total + '개 전부';
-    default       : return null;
-  }
-}
-
-/** 등급 한 줄 — 축하가 아니라 성적 요약 */
-function tierLine(tier, won){
-  switch(tier){
-    case 'WATCHER': return '오늘은 지켜보셨어요';
-    case 'ROOKIE' : return '경매에 참여했어요';
-    case 'SWEEP'  : return '전 상품 최고가 달성';
-    default       : return won + '개의 최고가를 지켰어요';
-  }
-}
-
-/** ISO → "8월 16일 21:00" (서울 기준)
-    ⚠️ common.js 의 fmtTime 은 "21:00" 만 준다. 다음 회차는 날짜가 필요하지만
-       common.js 를 고치지 않기 위해 이 페이지 안에서만 만든다. */
-function fmtDay(iso){
-  const d = new Date(iso);
-  if(isNaN(d)) return '';
-  const day = new Intl.DateTimeFormat('ko-KR', {
-    timeZone:'Asia/Seoul', month:'long', day:'numeric'
-  }).format(d);
-  return day + ' ' + fmtTime(iso);
-}
-
-/* ── 화면 전환 ── */
-function showWait(msg, sub, retry){
-  $('#waitMsg').textContent = msg;
-  $('#waitSub').textContent = sub;
-  $('#retryBtn').classList.toggle('hide', !retry);
-  $('#waitView').classList.remove('hide');
-  $('#resultView').classList.add('hide');
-}
-function showResult(){
-  $('#waitView').classList.add('hide');
-  $('#resultView').classList.remove('hide');
-}
-
-/* ── 성적 + 등급 ── */
-function renderScore(my){
-  $('#wonN').textContent   = my.won_lots;
-  $('#totalN').textContent = '/ ' + my.total_lots;
-  $('#card1').classList.toggle('zero', my.won_lots === 0);
-
-  const tier = tierOf(my.has_bid, my.won_lots, my.total_lots);
-  const idx  = TIERS.indexOf(tier);
-
-  const el = $('#tierName');
-  el.textContent = tier;
-  /* 라임은 "내가 지킨 것" 전용 — 최고가 0개면 흰색 */
-  el.classList.toggle('low', idx < 2);
-
-  const goal = nextGoal(tier, my.total_lots);
-  $('#tierMsg').innerHTML =
-    '<b>' + esc(tierLine(tier, my.won_lots)) + '</b>' +
-    (goal ? '<div class="tiergoal">' + esc(goal) + '</div>' : '');
-}
-
-/* ── LOT 목록 (state.lots 사용) ── */
-function lotCard(l, dimmed){
-  const win = l.is_mine === true;
-  const fin = l.final_price || l.current_price || 0;
-  const img = l.image
-    ? '<img src="' + esc(CONFIG.IMG_DIR + l.image) + '" alt="" loading="lazy" onerror="imgFail(this)">'
-    : '<div class="noimg">이미지 준비중</div>';
-  return '<div class="lot' + (win ? ' win' : (dimmed ? ' dimmed' : '')) + '">' +
-    '<div class="thumb">' + img + '</div>' +
-    '<div class="lotmeta"><div class="lotno">LOT ' + pad(l.lot_no) + '</div>' +
-    '<div class="nm">' + esc(l.display_name) + '</div>' +
-    '<div class="fin">최종가<b>' + esc(money(fin)) + '</b></div></div>' +
-    (win ? '<div class="badge">✓ 내가 최고가</div>' : '') + '</div>';
-}
-
-function renderLots(lots){
-  if(!lots || !lots.length){
-    $('#mineList').innerHTML = '<div class="panel empty">상품 정보를 불러오지 못했습니다</div>';
-    $('#allToggle').classList.add('hide');
-    return;
-  }
-  const wins = lots.filter(l => l.is_mine === true);
-  $('#mineCount').textContent = wins.length + '개';
-  $('#mineList').innerHTML = wins.length
-    ? wins.map(l => lotCard(l, false)).join('')
-    : '<div class="panel empty">이번 회차에 지킨 상품은 없습니다</div>';
-  $('#lotList').innerHTML = lots.map(l => lotCard(l, l.is_mine !== true)).join('');
-  $('#allToggle').classList.remove('hide');
-  $('#allWrap').classList.add('hide');
-  $('#allToggle').textContent = '전체 최종가 보기 ↓';
-}
-
-/* ── 예측왕 ── */
-function renderKing(k){
-  /* ⚠️ null 은 오류가 아니라 집계 전. 프론트에서 다시 계산하지 않는다 */
-  if(!k){
-    $('#kingBox').innerHTML = '<div class="empty">예측 결과 집계 중</div>';
-    return;
-  }
-  $('#kingBox').innerHTML =
-    '<div class="who">' +
-      '<div class="nick">' + esc(k.nickname) + '</div>' +
-      '<div class="kingmeta">LOT ' + pad(k.lot_no) + ' · 오늘의 예측왕</div>' +
-    '</div>' +
-    '<div class="kv"><span>예상</span><b>' + esc(money(k.predicted_price)) + '</b></div>' +
-    '<div class="kv"><span>최종가</span><b>' + esc(money(k.final_price)) + '</b></div>' +
-    '<div class="kv diff"><span>차이</span><b>' + esc(money(k.diff)) + '</b></div>' +
-    '<div class="kingprize">예측왕에게 <b>' + esc(PRIZE) + '</b> 지급</div>';
-}
-
-/* ── 다음 회차 ── */
-function renderNext(n){
-  clearInterval(cdTimer);
-
-  /* ⚠️ 없으면 날짜를 만들지 않는다. 알림 신청 기능도 만들지 않는다 */
-  if(!n || !n.available || !n.auction_start_at){
-    $('#nextBox').innerHTML =
-      '<div class="eyebrow">다음 경매</div>' +
-      '<div class="cd off">준비 중</div>' +
-      '<div class="when">다음 경매를 준비하고 있어요</div>';
-    return;
-  }
-
-  /* ⚠️ CTA 를 붙이지 않는다.
-     nextRound_() 는 active 를 보지 않고 "미래 시작시각" 만 찾는다.
-     KR-R2 가 active=FALSE 인 동안 버튼을 누르면 getRound_() 가
-     여전히 active 인 KR-R1 을 읽어, 방금 본 끝난 회차로 되돌아간다.
-     round_id 로 특정 미래 회차를 조회하는 서버 계약이 생긴 뒤에 붙일 것. */
-  const iso = n.auction_start_at;
-  $('#nextBox').innerHTML =
-    '<div class="eyebrow">다음 경매</div>' +
-    '<div class="when when-day">' + esc(fmtDay(iso)) + '</div>' +
-    '<div class="cd" id="cd">--:--:--</div>' +
-    '<div class="when">시작까지 남은 시간</div>';
-
-  /* 카운트다운은 브라우저 시계가 아니라 server_time 오프셋 기준 */
-  const tick = () => {
-    const el = $('#cd');
-    if(!el){ clearInterval(cdTimer); return; }
-    const s = secondsUntil(iso);
-    if(s === null) return;
-    if(s <= 0){ el.textContent = '곧 시작'; clearInterval(cdTimer); return; }
-    el.textContent = hms(s);
-  };
-  tick();
-  cdTimer = setInterval(tick, 1000);
-}
-
-/* ── 로드 ── */
-async function load(){
-  attempt++;
-  try{
-    /* ① state — LOT 목록의 유일 기준 + 만료 LOT 마감 */
-    const s = await apiGet({});
-    if(!s || s.ok === false) throw new Error((s && s.error) || 'state 실패');
-
-    syncServerTime(s.server_time);
-    setMoney(s.currency, SESSION.locale);
-
-    /* ② result — 세션별 성적 */
-    const r = await apiGet({ action:'result' });
-    if(!r || r.ok === false) throw new Error((r && r.error) || 'result 실패');
-
-    if(r.status === 'pending'){
-      if(attempt < RETRY_MAX){
-        showWait('결과를 정리하고 있어요', '마지막 상품을 종료하는 중입니다', false);
-        setTimeout(load, RETRY_MS);
-      }else{
-        showWait('결과를 정리하고 있어요', '아직 경매가 진행 중입니다', true);
-      }
-      return;
-    }
-
-    renderScore(r.my_result);
-    renderLots(s.lots);
-    renderKing(r.prediction_winner);
-    renderNext(r.next_round);
-    showResult();
-
-  }catch(err){
-    console.warn('[result]', err);
-    showWait('결과를 불러오지 못했습니다', '잠시 후 다시 시도해주세요', true);
-  }
-}
-
-$('#allToggle').onclick = () => {
-  const box = $('#allWrap');
-  const opening = box.classList.contains('hide');
-  box.classList.toggle('hide', !opening);
-  $('#allToggle').textContent = opening ? '전체 최종가 접기 ↑' : '전체 최종가 보기 ↓';
-};
-
-$('#retryBtn').onclick = () => { attempt = 0; load(); };
-
+const CLAIM_FORM = 'https://forms.gle/xvKd7o7G9vSewtCa9';
 if(!SESSION.nickname) setNickname(makeNickname());
+$('#claimCode').textContent = SESSION.session_id;
+$('#claimBtn').href = CLAIM_FORM;
 trackView('result_view');
-load();
 </script>
 </body>
 </html>

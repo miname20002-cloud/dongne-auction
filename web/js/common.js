@@ -95,11 +95,7 @@ function makeNickname(){
 /* ═════════ API ═════════ */
 async function apiGet(params){
   if(!CONFIG.API_URL) throw new Error("API_URL 미설정");
-  const q = new URLSearchParams(Object.assign({
-    action: "state",
-    market: SESSION.market,
-    session: SESSION.session_id      // 서버가 is_mine 을 판정하는 데 사용
-  }, params));
+  const q = new URLSearchParams(Object.assign({ action: "state", market: SESSION.market }, params));
   const res = await fetch(CONFIG.API_URL + "?" + q.toString(), { cache: "no-store" });
   if(!res.ok) throw new Error("HTTP " + res.status);
   return res.json();
@@ -169,16 +165,6 @@ function moneyPlain(n){
   return (Number(n) || 0).toLocaleString(MONEY.locale);
 }
 
-/** ISO 문자열 → 서울 기준 "20:55" */
-function fmtTime(iso){
-  if(!iso) return "";
-  const d = new Date(iso);
-  if(isNaN(d)) return "";
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false
-  }).format(d);
-}
-
 function hms(sec){
   const s = Math.max(0, Math.floor(sec));
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
@@ -243,11 +229,13 @@ function setMinUnit(n){ MIN_UNIT = Number(n) || 1000; }
 const REJECT_MSG = {
   not_open     : "지금은 입찰할 수 없습니다",
   below_current: "이미 더 높은 금액이 있습니다",
-  over_limit   : "입찰 한도를 넘었습니다",
+  over_limit   : "입찰 상한선을 넘었습니다",
   bad_amount   : "금액을 확인해주세요",
   rate_limit   : "너무 빠릅니다. 잠시 후 다시",
   busy         : "처리 중입니다. 잠시 후 다시",
-  no_lot       : "상품을 찾을 수 없습니다"
+  no_lot       : "상품을 찾을 수 없습니다",
+  /* 반복 LIVE — 락 대기 중 사이클이 넘어간 경우. 사용자 잘못이 아니다 */
+  cycle_changed: "새 경매가 시작됐습니다. 다시 입찰해주세요"
 };
 
 function rejectMsg(r){

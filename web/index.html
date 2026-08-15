@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a09">
 <meta name="format-detection" content="telephone=no">
-<title>동네옥션 — 나의 낙찰가는? 오늘 밤 9시</title>
-<meta name="description" content="갖고 싶은 신품이 전부 1,000원에서 시작합니다. 나라면 얼마까지 부를까?">
-<meta property="og:title" content="나의 낙찰가는?">
-<meta property="og:description" content="오늘 밤 9시 · 전부 1,000원 START">
+<title>동네옥션 — 전부 1,000원부터 · 지금 경매 중</title>
+<meta name="description" content="Switch·AirPods·LEGO 가 전부 1,000원에서 시작합니다. 들어가면 바로 경매 중.">
+<meta property="og:title" content="전부 1,000원부터">
+<meta property="og:description" content="지금 경매 중 · 전부 1,000원 START">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -197,32 +197,28 @@ img{display:block;max-width:100%}
 <body>
 <header class="top"><div class="wrap">
   <div class="logo">동네<b>옥션</b></div>
-  <div class="state" id="state"><i class="dot"></i><span id="stateTxt">TONIGHT 21:00</span></div>
+  <div class="state" id="state"><i class="dot"></i><span id="stateTxt">연결 중</span></div>
 </div></header>
 
 <main>
   <!-- HERO -->
   <section class="hero wrap">
     <div class="kicker hidden" id="heroKicker"></div>
-    <div class="line1" id="heroLine">오늘 밤 · 신품 경매</div>
+    <div class="line1" id="heroLine">지금 진행 중</div>
     <div class="big">1,000<span class="cur">원</span><span class="start">START</span></div>
-    <h1>나의 낙찰가는?</h1>
-    <p class="lead" id="heroLead">갖고 싶은 신품.<br>나라면 얼마까지 부를까?</p>
+    <h1>전부 1,000원부터</h1>
+    <p class="lead" id="heroLead">들어가면 바로 참여합니다.<br>60초 안에 끝납니다.</p>
 
-    <div class="timer-wrap">
-      <div class="timer-label" id="timerLabel">경매 시작까지</div>
-      <div class="timer" id="timer">--<i>:</i>--<i>:</i>--</div>
-      <div class="timer-meta" id="timerMeta">한국시간(KST) 기준</div>
-    </div>
-
-    <a class="cta" href="predict.html" id="ctaHero" style="margin-top:26px">지금 참가하기 <span aria-hidden="true">→</span></a>
-    <p class="disclose">실제 결제 없음 · 참가비 없음 · 커피 쿠폰 증정</p>
+    <!-- ⚠️ 카운트다운 없음. 반복 LIVE 라 "기다림 0초" 가 제품의 핵심이다.
+         시각·9시·예측 관련 UI 를 다시 넣지 말 것. -->
+    <a class="cta" href="live.html" id="ctaHero" style="margin-top:26px">지금 경매 참여하기 <span aria-hidden="true">→</span></a>
+    <p class="disclose">실제 결제 없음 · 참가비 없음 · 입찰만 해도 커피 추첨</p>
   </section>
 
   <!-- LOTS -->
   <section class="sec wrap">
     <div class="sec-head">
-      <div><span class="en">TONIGHT</span><h2>오늘의 경매 물건</h2></div>
+      <div><span class="en">LOTS</span><h2>오늘의 경매 물건</h2></div>
       <span class="count" id="lotCount">— LOTS</span>
     </div>
     <div class="lots" id="lots"></div>
@@ -232,12 +228,12 @@ img{display:block;max-width:100%}
   <section class="sec wrap">
     <div class="sec-head"><div><span class="en">RULES</span><h2>게임 규칙</h2></div></div>
     <ol class="rules">
-      <li data-n="01"><div><b id="rule1">가격을 맞혀보세요</b>
-        <p>최종가에 가장 가까우면 3만원 · 시작 5분 전 마감</p></div></li>
+      <li data-n="01"><div><b id="rule1">한 상품에 60초</b>
+        <p>5개가 연달아 올라옵니다 · 사이는 10초</p></div></li>
       <li data-n="02"><div><b id="rule2">원하는 가격으로 입찰</b>
         <p>현재가보다 높다면 원하는 금액으로 바로 입찰</p></div></li>
-      <li data-n="03"><div><b>마지막 30초는 연장</b>
-        <p>마감 직전 새 입찰이 들어오면 30초 더</p></div></li>
+      <li data-n="03"><div><b>마지막 15초는 연장</b>
+        <p>마감 직전 새 입찰이 들어오면 15초 더</p></div></li>
     </ol>
     <p class="rulenote">상품별 입찰 한도가 있습니다.</p>
   </section>
@@ -246,11 +242,12 @@ img{display:block;max-width:100%}
   <section class="sec wrap">
     <div class="reward">
       <div class="en">REWARD</div>
-      <h2>최종가 맞히고 <em>3만원</em>. 참여하면 커피 추첨.</h2>
+      <h2>입찰만 해도 <em>커피 추첨</em>.</h2>
       <div class="prizes">
-        <div class="prize"><b>1명</b><span>예측왕</span><em>3만원</em></div>
         <div class="prize"><b>10명</b><span>참여 추첨</span><em>커피</em></div>
       </div>
+      <!-- ⚠️ 예측왕 3만원은 반복 LIVE 에서 제외됐다. 입장 시점이 제각각이라
+           "사전 예측" 이 성립하지 않는다. 광고 문구에도 넣지 말 것. -->
     </div>
   </section>
 
@@ -267,7 +264,7 @@ img{display:block;max-width:100%}
     <div class="sec-head"><div><span class="en">ROUND 1</span><h2>첫 기록을 만드는 중</h2></div></div>
     <div class="empty">
       <h3>아직 아무도 모릅니다.</h3>
-      <p>이번이 첫 회차입니다.<br>오늘 나온 가격이 첫 번째 기록이 됩니다.</p>
+      <p>지금 첫 경매가 돌아가는 중입니다.<br>여기서 나온 가격이 첫 번째 기록이 됩니다.</p>
     </div>
   </section>
 </main>
@@ -276,7 +273,7 @@ img{display:block;max-width:100%}
   <div class="logo">동네<b>옥션</b></div>
   <p>모의경매 · 실제 상품 판매가 아닙니다.<br>
      결제·배송은 발생하지 않습니다.<br>
-     쿠폰 추첨 결과는 참가자에게 안내합니다.</p>
+     당첨자 발표와 수령 안내는 결과 화면에서 확인할 수 있습니다.</p>
 </div></footer>
 
 <div class="bar"><div class="wrap">
@@ -285,7 +282,7 @@ img{display:block;max-width:100%}
       <b id="barTime">--:--:--</b>
       <span id="barTxt">불러오는 중…</span>
     </div>
-    <a class="cta" href="predict.html" id="ctaBar">참가하기</a>
+    <a class="cta" href="live.html" id="ctaBar">참여하기</a>
   </div>
   <p class="bar-disclose">모의경매 · 실제 결제·배송 없음</p>
 </div></div>
@@ -305,9 +302,9 @@ function render(s){
   /* LOT 수는 서버 데이터가 기준 — 하드코딩하지 않는다 */
   const total = s.lots.length;
   $("#heroLine").innerHTML =
-    fmtTime(s.auction_start_at) + " · 신품 <b>" + total + "개</b>";
+    "지금 진행 중 · 신품 <b>" + total + "개</b>";
   $("#heroLead").innerHTML =
-    "갖고 싶은 신품 " + total + "개.<br>나라면 얼마까지 부를까?";
+    "신품 " + total + "개가 60초씩 연달아.<br>들어가면 바로 참여합니다.";
   $("#lots").innerHTML = tonight.map((x, i) => {
     const on = x.state === "onair";
     const feat = i === 0;
@@ -354,79 +351,37 @@ function render(s){
 function tick(){
   if(!STATE) return;
   const s = STATE;
-  const kick = $("#heroKicker"), tm = $("#timer");
-  const setCta = (href, hero, bar) => {
-    $("#ctaHero").setAttribute("href", href);
-    $("#ctaBar").setAttribute("href", href);
+  const kick = $("#heroKicker");
+  const setCta = (hero, bar) => {
     $("#ctaHero").innerHTML = hero + ' <span aria-hidden="true">→</span>';
     $("#ctaBar").textContent = bar;
   };
+  /* ⚠️ CTA 목적지는 항상 live.html 이다. 반복 LIVE 에서는 예외가 없다.
+     predict.html / result.html 로 보내지 말 것. */
 
   if(s.phase === "live"){
-    tm.className = "timer live"; tm.textContent = "ON AIR";
-    $("#timerLabel").textContent = "LIVE NOW";
-    $("#timerMeta").textContent  = "지금 입찰이 진행 중입니다";
-    $("#stateTxt").textContent = "LIVE NOW";
     $("#state").classList.add("live");
+    $("#stateTxt").textContent = "LIVE NOW";
     kick.className = "kicker live"; kick.textContent = "LIVE NOW";
-    $("#barTime").className = "live"; $("#barTime").textContent = "지금 진행 중";
-    $("#barTxt").textContent = "바로 입찰할 수 있습니다";
-    setCta("live.html", "지금 입찰하기", "입찰하기");
-    return;
-  }
-  if(s.phase === "ended"){
-    tm.className = "timer closed"; tm.textContent = "CLOSED";
-    $("#timerLabel").textContent = "ROUND CLOSED";
-    $("#timerMeta").textContent  = "다음 회차는 곧 공지됩니다";
-    $("#stateTxt").textContent = "CLOSED";
-    $("#state").classList.remove("live");
-    kick.className = "kicker closed"; kick.textContent = "ROUND CLOSED";
-    $("#barTime").className = ""; $("#barTime").textContent = "회차 종료";
-    $("#barTxt").textContent = "결과를 확인해보세요";
-    setCta("live.html", "결과 보러 가기", "결과 보기");
-    return;
-  }
-  if(s.phase === "standby"){
-    tm.className = "timer live"; tm.textContent = "SOON";
-    $("#timerLabel").textContent = "곧 시작";
-    $("#timerMeta").textContent  = "첫 상품이 곧 올라옵니다";
-    $("#stateTxt").textContent = "곧 시작";
-    $("#state").classList.remove("live");
-    kick.className = "kicker"; kick.textContent = "STARTING SOON";
-    $("#barTime").className = ""; $("#barTime").textContent = "곧 시작";
-    $("#barTxt").textContent = "미리 들어와 계세요";
-    setCta("live.html", "경매장 들어가기", "입장하기");
+    $("#barTime").className = "live";
+    $("#barTime").textContent = "지금 진행 중";
+    $("#barTxt").textContent  = s.current_lot
+      ? "LOT " + pad(s.current_lot.lot_no) + " · " + s.current_lot.display_name
+      : "바로 입찰할 수 있습니다";
+    setCta("지금 입찰하기", "입찰하기");
     return;
   }
 
-  /* predict / closing — 21:00 까지 카운트다운 */
-  const left = secondsUntil(s.auction_start_at);
-  if(left === null) return;
-  let x = Math.max(0, Math.floor(left));
-  const d = Math.floor(x / 86400); x %= 86400;
-  const h = Math.floor(x / 3600);  x %= 3600;
-  const m = pad(Math.floor(x / 60)), sec = pad(x % 60);
-
-  tm.className = "timer";
-  tm.innerHTML = (d > 0 ? d + "<i>d</i> " : "") + pad(h) + "<i>:</i>" + m + "<i>:</i>" + sec;
-  $("#timerLabel").textContent = "경매 시작까지";
-  $("#stateTxt").textContent = d > 0 ? "TONIGHT 21:00" : "오늘 21:00";
+  /* intermission / ended — 둘 다 몇 초 뒤 다시 시작한다.
+     초 단위 카운트다운은 live.html 이 보여주므로 여기서는 상태만 알린다. */
   $("#state").classList.remove("live");
-  kick.className = "kicker hidden";
-
-  const openPredict = s.phase === "predict";
-  const pc = fmtTime(s.predict_close_at);
-  $("#timerMeta").innerHTML = openPredict
-    ? "한국시간(KST) 기준<br><b>예상 최종가는 " + pc + " 마감 · 맞히면 3만원</b>"
-    : "한국시간(KST) 기준<br><b>예상 최종가 마감 · 곧 시작합니다</b>";
+  const soon = s.phase === "ended" ? "다음 경매 준비 중" : "다음 상품 준비 중";
+  $("#stateTxt").textContent = "곧 시작";
+  kick.className = "kicker"; kick.textContent = "STARTING SOON";
   $("#barTime").className = "";
-  $("#barTime").textContent = (d > 0 ? d + "일 " : "") + pad(h) + ":" + m + ":" + sec;
-  $("#barTxt").textContent = openPredict
-    ? pc + " 예상 최종가 마감 · " + fmtTime(s.auction_start_at) + " 경매 시작"
-    : "곧 시작합니다";
-  setCta(openPredict ? "predict.html" : "live.html",
-         openPredict ? "지금 참가하기" : "경매장 들어가기",
-         openPredict ? "참가하기" : "입장하기");
+  $("#barTime").textContent = soon;
+  $("#barTxt").textContent  = "잠시 후 바로 시작합니다";
+  setCta("경매장 들어가기", "입장하기");
 }
 
 /* ── 시작 ── */
