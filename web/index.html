@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0a09">
 <meta name="format-detection" content="telephone=no">
 <title>동네옥션 — 전부 1,000원부터 · 지금 경매 중</title>
-<meta name="description" content="Switch·AirPods·LEGO 가 전부 1,000원에서 시작합니다. 들어가면 바로 경매 중.">
-<meta property="og:title" content="전부 1,000원부터">
-<meta property="og:description" content="지금 경매 중 · 전부 1,000원 START">
+<meta name="description" content="Switch·AirPods·LEGO 가 전부 1,000원에서 시작합니다. 회원가입 없이 바로 참여.">
+<meta property="og:title" content="오늘 뭐가 1,000원에 끝날까?">
+<meta property="og:description" content="지금 경매 중 · 전부 1,000원 START · 회원가입 없이 바로 참여">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,7 @@
   --bg:#0a0a09;--panel:#131312;--panel2:#191918;
   --text:#f4f4ef;--muted:#a09f98;--dim:#696963;--line:#292927;
   --lime:#dfff20;--live:#ff4d4d;--sold:#ff7a00;
-  --barh:76px;
+  --barh:70px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -33,6 +33,8 @@ button{border:0;background:none;cursor:pointer}
 img{display:block;max-width:100%}
 .wrap{width:min(calc(100% - 32px),680px);margin:auto}
 .hidden{display:none!important}
+/* 한국어 줄바꿈 — 단어 중간에서 끊기지 않게 */
+h1,h2,h3,p,.play b,.card-name{word-break:keep-all;overflow-wrap:anywhere}
 
 /* top */
 .top{position:sticky;top:0;z-index:40;background:rgba(10,10,9,.9);
@@ -47,16 +49,19 @@ img{display:block;max-width:100%}
 .state.live .dot{background:var(--live);box-shadow:0 0 14px rgba(255,77,77,.65);animation:pulse 1.2s infinite}
 @keyframes pulse{50%{opacity:.2}}
 
-/* hero */
-.hero{padding:52px 0 44px;text-align:center}
-.kicker{display:inline-block;margin-bottom:20px;padding:6px 11px;
-  font:800 10px Archivo,sans-serif;letter-spacing:.2em;border:1px solid currentColor}
+/* ── HERO ── */
+.hero{padding:30px 0 34px;text-align:center}
+.kicker{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;
+  padding:6px 12px;border-radius:999px;border:1px solid currentColor;color:var(--dim);
+  font:800 10px Archivo,sans-serif;letter-spacing:.18em}
+.kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .kicker.live{color:var(--live)}
-.kicker.closed{color:var(--sold)}
-.hero .line1{margin-top:0;font-size:15px;color:var(--muted);letter-spacing:-.02em}
-.hero .line1 b{color:var(--text);font-weight:800}
-.hero .big{margin-top:12px;color:var(--text);
-  font:800 clamp(54px,15.5vw,86px)/.9 Archivo,sans-serif;
+.kicker.live:before{box-shadow:0 0 12px rgba(255,77,77,.8);animation:pulse 1.2s infinite}
+.hero h1{font-size:clamp(25px,7vw,36px);line-height:1.18;
+  letter-spacing:-.055em;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--lime)}
+.hero .big{margin-top:14px;color:var(--text);
+  font:800 clamp(46px,13.5vw,72px)/.92 Archivo,sans-serif;
   letter-spacing:-.065em;font-variant-numeric:tabular-nums}
 .hero .big .cur{font-family:"Pretendard Variable",Pretendard,sans-serif;
   font-size:.42em;font-weight:800;letter-spacing:-.03em;color:var(--text);
@@ -64,107 +69,97 @@ img{display:block;max-width:100%}
 .hero .big .start{font-family:Archivo,sans-serif;font-weight:900;
   font-size:.25em;letter-spacing:.10em;color:var(--lime);
   vertical-align:.9em;margin-left:.22em}
-.hero h1{margin-top:22px;font-size:clamp(26px,6.8vw,38px);line-height:1.14;
-  letter-spacing:-.05em;font-weight:800}
-.hero .lead{margin-top:16px;color:var(--muted);font-size:13.5px;line-height:1.8}
-
-.timer-wrap{margin-top:36px;padding-top:26px;border-top:1px solid var(--line)}
-.timer-label{font:800 10px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.timer{margin-top:11px;font:500 clamp(38px,10.5vw,54px)/.95 Archivo,sans-serif;
-  letter-spacing:-.035em;white-space:nowrap;font-variant-numeric:tabular-nums}
-.timer i{font-style:normal;color:var(--dim);font-weight:500}
-.timer.live{color:var(--live);font-weight:900;letter-spacing:-.05em}
-.timer.closed{color:var(--sold);font-weight:900;letter-spacing:-.05em}
-.timer-meta{margin-top:13px;color:var(--dim);font-size:11px;line-height:1.85}
-.timer-meta b{color:var(--muted);font-weight:800}
+.hero .sub{margin-top:14px;color:var(--muted);font-size:13.5px;letter-spacing:-.02em}
+.hero .cta{margin-top:22px}
+.disclose{margin-top:13px;text-align:center;font-size:11.5px;font-weight:700;
+  color:var(--muted);line-height:1.75}
+.fine{margin-top:11px;text-align:center;font-size:11px;color:var(--dim);line-height:1.7}
+.fine b{color:var(--muted);font-weight:800}
 
 /* cta */
-.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:60px;
+.cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:58px;
   background:var(--lime);color:#0a0a09;font-size:16px;font-weight:900;
   letter-spacing:-.025em;border-radius:14px;
-  box-shadow:0 10px 28px rgba(223,255,32,.10);
-  transition:filter .15s,box-shadow .15s}
-.cta:hover{filter:brightness(1.04);box-shadow:0 12px 32px rgba(223,255,32,.15)}
-.cta:active{transform:scale(.987)}
-.cta.live{background:var(--live);color:#fff}
-.disclose{margin-top:13px;text-align:center;font-size:11.5px;font-weight:700;color:var(--muted)}
+  box-shadow:0 10px 30px rgba(223,255,32,.13);
+  transition:filter .15s,box-shadow .15s,transform .12s}
+.cta:hover{filter:brightness(1.04);box-shadow:0 12px 34px rgba(223,255,32,.2)}
+.cta:active{transform:scale(.985)}
+.cta.live{background:var(--live);color:#fff;box-shadow:0 10px 30px rgba(255,77,77,.16)}
 
 /* section */
-.sec{padding:46px 0;border-top:1px solid var(--line)}
-.sec-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.sec{padding:40px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:20px}
 .sec-head .en{display:block;margin-bottom:7px;font:800 10px Archivo,sans-serif;
   letter-spacing:.2em;color:var(--dim)}
-.sec-head h2{font-size:22px;letter-spacing:-.05em;font-weight:800}
-.count{font:800 11px Archivo,sans-serif;color:var(--dim);letter-spacing:.08em}
+.sec-head h2{font-size:21px;letter-spacing:-.05em;font-weight:800;line-height:1.25}
+.count{flex:0 0 auto;font-size:11.5px;font-weight:800;color:var(--dim);letter-spacing:-.02em}
 
-/* lots */
-.lots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
-.lot{min-width:0}
-.lot.feature{grid-column:1 / -1}
-.lot.feature .lot-media{aspect-ratio:4/3}
-.lot.feature .lot-name{margin-top:15px;font-size:20px;letter-spacing:-.05em;font-weight:800}
-.lot.feature .lot-price{margin-top:7px;font-size:24px}
-.lot-media{position:relative;aspect-ratio:1;overflow:hidden;background:#f7f7f4}
-.lot-media img{width:100%;height:100%;object-fit:contain;object-position:center;padding:6%}
-.lot-no{position:absolute;z-index:2;left:0;top:0;padding:6px 10px;
-  background:rgba(10,10,9,.72);backdrop-filter:blur(8px);
-  font:900 11px Archivo,sans-serif;color:var(--muted);letter-spacing:.04em}
-.lot-onair{position:absolute;z-index:2;right:8px;top:8px;padding:5px 9px;
-  background:var(--live);color:#fff;font:900 10px Archivo,sans-serif;letter-spacing:.1em}
-.lot-name{margin-top:12px;font-size:14.5px;font-weight:800;letter-spacing:-.04em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lot-price{margin-top:6px;font:800 20px Archivo,sans-serif;color:var(--text);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.lot-price .w{font-family:"Pretendard Variable",Pretendard,sans-serif;font-size:.62em;font-weight:800;margin-left:.04em}
-.lot-price small{font:900 9.5px Archivo,sans-serif;color:var(--dim);letter-spacing:.1em;margin-left:7px}
-.lot-price.now{color:var(--live)}
-.lot-price.now small{color:var(--live)}
-.lot.onair .lot-media{outline:2px solid var(--live);outline-offset:-2px}
+/* ── TODAY'S DROP ── */
+.drop{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 10px}
+.card{min-width:0;display:flex;flex-direction:column}
+.card.feat{order:-1;grid-column:1 / -1}
+.card.feat .card-media{aspect-ratio:2/1}
+.card.feat .card-name{margin-top:12px;font-size:17px}
+.card.feat .card-price{font-size:19px}
+.card-media{position:relative;aspect-ratio:1;overflow:hidden;
+  border-radius:14px;background:#f7f7f4;
+  transition:transform .18s}
+.card-media img{width:100%;height:100%;object-fit:contain;object-position:center;padding:8%}
+.card:active .card-media{transform:scale(.985)}
+.card.on .card-media{outline:2px solid var(--live);outline-offset:-2px}
+.card.done .card-media img{filter:grayscale(.5) brightness(.72)}
+.badge{position:absolute;z-index:2;left:8px;top:8px;padding:5px 9px;border-radius:8px;
+  font:900 10px Archivo,sans-serif;letter-spacing:.1em}
+.badge.live{background:var(--live);color:#fff}
+.badge.done{background:rgba(10,10,9,.8);backdrop-filter:blur(6px);color:var(--sold);
+  font:800 10.5px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.02em}
+.card-name{margin-top:10px;font-size:13.5px;font-weight:800;letter-spacing:-.04em;
+  line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden}
+.card-price{margin-top:5px;font:800 15px Archivo,sans-serif;color:var(--lime);
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.card-price .w{font-family:"Pretendard Variable",Pretendard,sans-serif;
+  font-size:.8em;font-weight:800;margin-left:.05em}
+.card-price small{font:800 10px "Pretendard Variable",Pretendard,sans-serif;
+  color:var(--dim);letter-spacing:-.02em;margin-left:6px}
+.card-price.now{color:var(--live)}
+.card-price.done{color:var(--sold)}
 
-/* rules */
-.rules{list-style:none}
-.rules li{display:grid;grid-template-columns:32px 1fr;gap:14px;padding:16px 0;
-  border-bottom:1px solid var(--line)}
-.rules li:first-child{border-top:1px solid var(--line)}
-.rules li:before{content:attr(data-n);font:800 12px Archivo,sans-serif;
-  color:var(--dim);letter-spacing:.02em;padding-top:4px}
-.rules b{font-size:17px;font-weight:800;letter-spacing:-.05em}
-.rules p{margin-top:5px;color:var(--dim);font-size:12.5px;line-height:1.6}
-.rules code{font:800 12.5px Archivo,sans-serif;color:var(--text);
-  background:var(--panel2);padding:2px 7px}
-.rulenote{margin-top:18px;padding:13px 15px;border:1px dashed var(--line);
-  color:var(--dim);font-size:12px;text-align:center;line-height:1.7}
+/* ── HOW TO PLAY ── */
+.plays{display:grid;gap:10px}
+.play{padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.play .k{font:900 12px Archivo,sans-serif;letter-spacing:.14em;color:var(--lime)}
+.play b{display:block;margin-top:9px;font-size:16px;font-weight:800;letter-spacing:-.045em}
+.play p{margin-top:5px;color:var(--dim);font-size:12.5px;line-height:1.6}
+.playnote{margin-top:14px;text-align:center;color:var(--dim);font-size:11.5px;line-height:1.7}
 
-/* reward */
-.reward{padding:24px 22px;background:var(--panel);text-align:center}
+/* ── REWARD ── */
+.reward{padding:26px 20px;background:var(--panel);border:1px solid var(--line);
+  border-radius:20px;text-align:center}
 .reward .en{font:800 10px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.reward h2{margin-top:13px;font-size:clamp(19px,5vw,24px);line-height:1.3;
+.reward h2{margin-top:12px;font-size:clamp(20px,5.4vw,26px);line-height:1.32;
   letter-spacing:-.05em;font-weight:800}
-.reward h2 em{font-style:normal;color:var(--text)}
-.reward .prizes{margin-top:18px;padding-top:17px;border-top:1px solid var(--line);
-  display:flex;justify-content:center;gap:36px}
-.reward .prize b{display:block;font:900 26px Archivo,sans-serif;
-  color:var(--text);letter-spacing:-.04em;line-height:1}
-.reward .prize span{display:block;margin-top:8px;font-size:11.5px;font-weight:700}
-.reward .prize em{display:block;margin-top:4px;font-style:normal;
-  font:800 10px Archivo,sans-serif;letter-spacing:.06em;color:var(--dim)}
+.reward h2 em{font-style:normal;color:var(--lime)}
+.reward .sub{margin-top:12px;color:var(--muted);font-size:12.5px}
+.reward .rlink{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.reward .rlink a{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:-.02em}
+.reward .rlink a:hover{color:var(--text)}
 
-/* results / empty */
-.empty{padding:34px 24px;border:1px dashed var(--line);text-align:center}
-.empty h3{font-size:20px;letter-spacing:-.05em;font-weight:800}
-.empty p{margin-top:14px;color:var(--muted);font-size:13px;line-height:1.85}
-.sold-list{display:flex;flex-direction:column;gap:14px}
-.sold{display:grid;grid-template-columns:104px 1fr;gap:16px;padding:14px;background:var(--panel)}
-.sold-img{position:relative;aspect-ratio:1;overflow:hidden;background:#e9e9e4}
-.sold-img img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.45) brightness(.68)}
-.sold-badge{position:absolute;top:0;left:0;padding:5px 9px;background:var(--sold);
-  color:#0a0a09;font:900 9px Archivo,sans-serif;letter-spacing:.08em}
-.sold-info{align-self:center;min-width:0}
-.sold-date{font:800 10px Archivo,sans-serif;letter-spacing:.1em;color:var(--dim)}
-.sold-info h3{margin-top:7px;font-size:15px;letter-spacing:-.04em;
+/* ── 방금 끝난 가격 / 첫 기록 ── */
+.sold-list{display:flex;flex-direction:column;gap:8px}
+.sold{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;
+  padding:10px 12px;background:var(--panel);border-radius:12px}
+.sold-img{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#eeeee9}
+.sold-img img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.4) brightness(.85)}
+.sold-info{min-width:0}
+.sold-info h3{font-size:13px;font-weight:800;letter-spacing:-.04em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sold-price{margin-top:10px;font:900 26px Archivo,sans-serif;color:var(--sold);letter-spacing:-.04em}
-.sold-sub{margin-top:6px;color:var(--muted);font-size:12px}
-.sold-sub b{color:var(--text)}
+.sold-info span{display:block;margin-top:2px;font-size:10.5px;color:var(--dim)}
+.sold-price{font:900 17px Archivo,sans-serif;color:var(--sold);
+  letter-spacing:-.04em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.empty{padding:28px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center}
+.empty h3{font-size:18px;letter-spacing:-.05em;font-weight:800}
+.empty p{margin-top:12px;color:var(--muted);font-size:12.5px;line-height:1.8}
 
 .noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:repeating-linear-gradient(135deg,#101010,#101010 10px,#151514 10px,#151514 20px);
@@ -172,23 +167,31 @@ img{display:block;max-width:100%}
 
 /* sticky bar */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:60;
-  padding:11px 16px calc(10px + env(safe-area-inset-bottom));
+  padding:11px 16px calc(11px + env(safe-area-inset-bottom));
   background:rgba(10,10,9,.95);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
 .bar .inner{display:flex;align-items:center;gap:14px}
 .bar-info{flex:1;min-width:0}
-.bar-info b{display:block;font:800 17px Archivo,sans-serif;letter-spacing:-.04em;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar-info b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-info b.live{color:var(--live)}
 .bar-info span{display:block;margin-top:2px;font-size:11px;color:var(--dim);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar .cta{width:auto;flex:0 0 auto;padding:0 22px;min-height:50px;font-size:15px;border-radius:12px;box-shadow:none}
-.bar-disclose{margin:8px auto 0;text-align:center;font-size:10px;color:var(--dim)}
+.bar .cta{width:auto;flex:0 0 auto;padding:0 20px;min-height:48px;
+  font-size:14.5px;border-radius:12px;box-shadow:none}
 
-.foot{padding:44px 0 48px;border-top:1px solid var(--line);text-align:center}
+.foot{padding:38px 0 44px;border-top:1px solid var(--line);text-align:center}
 .foot p{margin-top:14px;color:var(--dim);font-size:11px;line-height:1.85}
 
-@media(min-width:600px){.lot.feature .lot-media{aspect-ratio:21/9}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+/* 진입 fade-up */
+.rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.rv.in{opacity:1;transform:none}
+
+@media(min-width:600px){
+  .card.feat .card-media{aspect-ratio:21/9}
+  .plays{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}}
 :focus-visible{outline:2px solid var(--lime);outline-offset:3px}
 
 </style>
@@ -204,68 +207,78 @@ img{display:block;max-width:100%}
   <!-- HERO -->
   <section class="hero wrap">
     <div class="kicker hidden" id="heroKicker"></div>
-    <div class="line1" id="heroLine">지금 진행 중</div>
+    <h1>오늘 뭐가<br><em>1,000원</em>에 끝날까?</h1>
     <div class="big">1,000<span class="cur">원</span><span class="start">START</span></div>
-    <h1>전부 1,000원부터</h1>
-    <p class="lead" id="heroLead">들어가면 바로 참여합니다.<br>60초 안에 끝납니다.</p>
+    <p class="sub" id="heroLine">60초마다 바뀌는 실시간 모의경매</p>
 
     <!-- ⚠️ 카운트다운 없음. 반복 LIVE 라 "기다림 0초" 가 제품의 핵심이다.
          시각·9시·예측 관련 UI 를 다시 넣지 말 것. -->
-    <a class="cta" href="live.html" id="ctaHero" style="margin-top:26px">지금 경매 참여하기 <span aria-hidden="true">→</span></a>
-    <p class="disclose">실제 결제 없음 · 참가비 없음 · 입찰만 해도 커피 추첨</p>
+    <a class="cta" href="live.html" id="ctaHero">지금 경매 들어가기 <span aria-hidden="true">→</span></a>
+    <p class="disclose">회원가입 없이 바로 참여 · 결제 없음<br>입찰 1회만 해도 커피 기프티콘 10명 추첨</p>
+    <p class="fine" id="heroLead">모의경매 · 실제 결제는 발생하지 않습니다</p>
   </section>
 
-  <!-- LOTS -->
-  <section class="sec wrap">
+  <!-- TODAY'S DROP -->
+  <section class="sec wrap" data-rv>
     <div class="sec-head">
-      <div><span class="en">LOTS</span><h2>오늘의 경매 물건</h2></div>
-      <span class="count" id="lotCount">— LOTS</span>
+      <div><span class="en">TODAY'S DROP</span>
+        <h2>오늘 올라오는 <span id="lotCount">—</span>개</h2></div>
+      <span class="count">전부 1,000원 시작</span>
     </div>
-    <div class="lots" id="lots"></div>
+    <div class="drop" id="lots"></div>
   </section>
 
-  <!-- RULES -->
-  <section class="sec wrap">
-    <div class="sec-head"><div><span class="en">RULES</span><h2>게임 규칙</h2></div></div>
-    <ol class="rules">
-      <li data-n="01"><div><b id="rule1">한 상품에 60초</b>
-        <p>5개가 연달아 올라옵니다 · 사이는 10초</p></div></li>
-      <li data-n="02"><div><b id="rule2">원하는 가격으로 입찰</b>
-        <p>현재가보다 높다면 원하는 금액으로 바로 입찰</p></div></li>
-      <li data-n="03"><div><b>마지막 15초는 연장</b>
-        <p>마감 직전 새 입찰이 들어오면 30초 더</p></div></li>
-    </ol>
-    <p class="rulenote">상품별 입찰 한도가 있습니다.</p>
+  <!-- HOW TO PLAY -->
+  <section class="sec wrap" data-rv>
+    <div class="sec-head"><div><span class="en">HOW TO PLAY</span><h2>딱 이것만 알면 됩니다</h2></div></div>
+    <div class="plays">
+      <div class="play"><div class="k">60 SEC</div>
+        <b id="rule1">한 상품은 단 60초</b>
+        <p>끝나면 곧바로 다음 상품이 올라옵니다.</p></div>
+      <div class="play"><div class="k">LAST 15</div>
+        <b id="rule2">마지막 15초 이내 입찰 시 +30초</b>
+        <p>마감 직전 새 입찰이 들어오면 30초 더 이어집니다.</p></div>
+      <div class="play"><div class="k">JUST BID</div>
+        <b>입찰 1회면 커피 추첨 자동 참여</b>
+        <p>현재가보다 높은 금액을 넣기만 하면 됩니다.</p></div>
+    </div>
+    <p class="playnote">상품별 입찰 한도가 있습니다.</p>
   </section>
 
   <!-- REWARD -->
-  <section class="sec wrap">
+  <section class="sec wrap" data-rv>
     <div class="reward">
       <div class="en">REWARD</div>
-      <h2>입찰만 해도 <em>커피 추첨</em>.</h2>
-      <div class="prizes">
-        <div class="prize"><b>10명</b><span>참여 추첨</span><em>커피</em></div>
-      </div>
-      <!-- ⚠️ 예측왕 3만원은 반복 LIVE 에서 제외됐다. 입장 시점이 제각각이라
-           "사전 예측" 이 성립하지 않는다. 광고 문구에도 넣지 말 것. -->
+      <h2>입찰만 해도<br><em>커피 기프티콘 10명</em> 추첨</h2>
+      <p class="sub">회원가입 필요 없음 · 1인 1추첨권</p>
+      <!-- ⚠️ 커피 추첨 외의 경품(사전 가격맞히기 상금)은 반복 LIVE 에서 제외됐다.
+           입장 시점이 제각각이라 "사전 예측" 이 성립하지 않는다.
+           경품은 커피 추첨 하나만 노출한다. 광고 문구에도 다른 상금을 넣지 말 것. -->
+      <div class="rlink"><a href="result.html">경품 규정 · 당첨자 발표 →</a></div>
     </div>
   </section>
 
-  <!-- PAST RESULTS -->
+  <!-- 방금 끝난 가격 -->
   <section class="sec wrap hidden" id="soldSec">
     <div class="sec-head">
-      <div><span class="en">PAST RESULTS</span><h2>지난 최종가</h2></div>
+      <div><span class="en">CLOSED</span><h2>방금 끝난 가격</h2></div>
       <span class="count" id="soldN">—</span>
     </div>
     <div class="sold-list" id="soldList"></div>
   </section>
 
   <section class="sec wrap hidden" id="emptySec">
-    <div class="sec-head"><div><span class="en">ROUND 1</span><h2>첫 기록을 만드는 중</h2></div></div>
+    <div class="sec-head"><div><span class="en">FIRST DROP</span><h2>첫 기록을 만드는 중</h2></div></div>
     <div class="empty">
       <h3>아직 아무도 모릅니다.</h3>
       <p>지금 첫 경매가 돌아가는 중입니다.<br>여기서 나온 가격이 첫 번째 기록이 됩니다.</p>
     </div>
+  </section>
+
+  <!-- 하단 CTA -->
+  <section class="sec wrap" data-rv>
+    <a class="cta" href="live.html">지금 LIVE 참여하기 <span aria-hidden="true">→</span></a>
+    <p class="disclose">가입 없이 바로 참여 · 실제 결제 없음 · 배송 없음</p>
   </section>
 </main>
 
@@ -279,12 +292,11 @@ img{display:block;max-width:100%}
 <div class="bar"><div class="wrap">
   <div class="inner">
     <div class="bar-info">
-      <b id="barTime">--:--:--</b>
-      <span id="barTxt">불러오는 중…</span>
+      <b id="barTime">불러오는 중…</b>
+      <span id="barTxt">잠시만 기다려주세요</span>
     </div>
     <a class="cta" href="live.html" id="ctaBar">참여하기</a>
   </div>
-  <p class="bar-disclose">모의경매 · 실제 결제·배송 없음</p>
 </div></div>
 
 <script src="js/common.js"></script>
@@ -294,32 +306,38 @@ img{display:block;max-width:100%}
 let STATE = null;
 
 function render(s){
-  const tonight = s.lots.filter(l => l.state === "wait" || l.state === "onair");
-  const sold    = s.lots.filter(l => l.state === "closed" && l.final_price > 0)
-                        .sort((a,b) => b.lot_no - a.lot_no);
+  /* 오늘 라인업은 전부 보여준다 — 종료분까지 포함해야 개수·레이아웃이 흔들리지 않는다 */
+  const lineup = s.lots.slice().sort((a, b) => a.lot_no - b.lot_no);
+  const sold   = s.lots.filter(l => l.state === "closed" && l.final_price > 0)
+                       .sort((a, b) => b.lot_no - a.lot_no);
 
-  $("#lotCount").textContent = tonight.length + " LOTS";
-  /* LOT 수는 서버 데이터가 기준 — 하드코딩하지 않는다 */
-  const total = s.lots.length;
-  $("#heroLine").innerHTML =
-    "지금 진행 중 · 신품 <b>" + total + "개</b>";
+  /* 상품 수는 서버 데이터가 기준 — 하드코딩하지 않는다 */
+  const total = lineup.length;
+  $("#lotCount").textContent = total;
+  $("#heroLine").textContent = "60초마다 바뀌는 실시간 모의경매";
   $("#heroLead").innerHTML =
-    "신품 " + total + "개가 60초씩 연달아.<br>들어가면 바로 참여합니다.";
-  $("#lots").innerHTML = tonight.map((x, i) => {
-    const on = x.state === "onair";
-    const feat = i === 0;
-    const price = on && x.current_price > s.start_price
-      ? `<div class="lot-price now">${moneyPlain(x.current_price)}<span class="w">원</span><small>현재가</small></div>`
-      : `<div class="lot-price">${moneyPlain(s.start_price)}<span class="w">원</span><small>START</small></div>`;
+    "오늘 신품 <b>" + total + "개</b> · 모의경매라 실제 결제는 없습니다";
+
+  $("#lots").innerHTML = lineup.map(x => {
+    const on   = x.state === "onair";
+    const done = x.state === "closed";
+    let price;
+    if(done && x.final_price > 0){
+      price = `<div class="card-price done">${moneyPlain(x.final_price)}<span class="w">원</span><small>최종가</small></div>`;
+    }else if(on && x.current_price > s.start_price){
+      price = `<div class="card-price now">${moneyPlain(x.current_price)}<span class="w">원</span><small>현재가</small></div>`;
+    }else{
+      price = `<div class="card-price">${moneyPlain(s.start_price)}<span class="w">원~</span></div>`;
+    }
     return `
-      <article class="lot${feat ? " feature" : ""}${on ? " onair" : ""}">
-        <div class="lot-media">
+      <article class="card${on ? " feat on" : ""}${done ? " done" : ""}">
+        <div class="card-media">
           <img src="${esc(CONFIG.IMG_DIR + x.image)}" alt="${esc(x.display_name)}"
                loading="lazy" decoding="async" onerror="imgFail(this)">
-          <span class="lot-no">${pad(x.lot_no)}</span>
-          ${on ? '<span class="lot-onair">LIVE</span>' : ''}
+          ${on ? '<span class="badge live">LIVE</span>' : ''}
+          ${done ? '<span class="badge done">종료</span>' : ''}
         </div>
-        <div class="lot-name">${esc(x.display_name)}</div>
+        <div class="card-name">${esc(x.display_name)}</div>
         ${price}
       </article>`;
   }).join("");
@@ -327,19 +345,18 @@ function render(s){
   if(sold.length){
     $("#soldSec").classList.remove("hidden");
     $("#emptySec").classList.add("hidden");
-    $("#soldN").textContent = sold.length + " CLOSED";
+    $("#soldN").textContent = sold.length + "개 종료";
     $("#soldList").innerHTML = sold.map(x => `
       <article class="sold">
         <div class="sold-img">
           <img src="${esc(CONFIG.IMG_DIR + x.image)}" alt="${esc(x.display_name)}"
                loading="lazy" decoding="async" onerror="imgFail(this)">
-          <span class="sold-badge">CLOSED</span>
         </div>
         <div class="sold-info">
           <h3>${esc(x.display_name)}</h3>
-          <div class="sold-price">${money(x.final_price)}</div>
-          <div class="sold-sub"><b>${moneyPlain(s.start_price)}원</b> 시작</div>
+          <span>${moneyPlain(s.start_price)}원에서 시작</span>
         </div>
+        <div class="sold-price">${money(x.final_price)}</div>
       </article>`).join("");
   }else{
     $("#soldSec").classList.add("hidden");
@@ -347,7 +364,7 @@ function render(s){
   }
 }
 
-/* ── 시간·CTA 상태 ── */
+/* ── 상태·CTA ── */
 function tick(){
   if(!STATE) return;
   const s = STATE;
@@ -364,9 +381,9 @@ function tick(){
     $("#stateTxt").textContent = "LIVE NOW";
     kick.className = "kicker live"; kick.textContent = "LIVE NOW";
     $("#barTime").className = "live";
-    $("#barTime").textContent = "지금 진행 중";
+    $("#barTime").textContent = "지금 경매 중";
     $("#barTxt").textContent  = s.current_lot
-      ? "LOT " + pad(s.current_lot.lot_no) + " · " + s.current_lot.display_name
+      ? s.current_lot.display_name
       : "바로 입찰할 수 있습니다";
     setCta("지금 입찰하기", "입찰하기");
     return;
@@ -381,7 +398,7 @@ function tick(){
   $("#barTime").className = "";
   $("#barTime").textContent = soon;
   $("#barTxt").textContent  = "잠시 후 바로 시작합니다";
-  setCta("경매장 들어가기", "입장하기");
+  setCta("경매 들어가기", "입장하기");
 }
 
 /* ── 시작 ── */
@@ -399,13 +416,25 @@ const poller = createPoller(async () => {
 (function init(){
   if(!CONFIG.API_URL){
     $("#lots").innerHTML =
-      '<p class="rulenote" style="grid-column:1/-1">API_URL 이 설정되지 않았습니다.</p>';
+      '<p class="playnote" style="grid-column:1/-1">API_URL 이 설정되지 않았습니다.</p>';
     return;
   }
   trackLanding();
   poller.setInterval(CONFIG.POLL.idle);
   poller.start();
   setInterval(tick, 1000);
+})();
+
+/* 섹션 진입 fade-up — 지원 안 되면 그냥 항상 보인다 */
+(function reveal(){
+  if(!("IntersectionObserver" in window)) return;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px" });
+  $$("[data-rv]").forEach(el => { el.classList.add("rv"); io.observe(el); });
 })();
 </script>
 </body>

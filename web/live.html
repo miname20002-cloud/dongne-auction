@@ -68,7 +68,7 @@ img{display:block;max-width:100%}
 
 .foot{padding:40px 0 calc(60px + env(safe-area-inset-bottom));
   border-top:1px solid var(--line);text-align:center}
-.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.4;white-space:nowrap}
+.foot p{margin-top:12px;color:var(--dim);font-size:10.5px;line-height:1.5}
 .foot .auto{color:var(--lime);font-weight:700;font-size:11.5px}
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -88,7 +88,7 @@ img{display:block;max-width:100%}
 
 /* 현재 LOT */
 .stage{padding:16px 0 4px;text-align:center}
-.lotno{font:900 11px Archivo,sans-serif;letter-spacing:.2em;color:var(--live)}
+.lotno{font-size:12px;font-weight:800;letter-spacing:-.02em;color:var(--live)}
 .photo{margin:14px auto 0;position:relative;aspect-ratio:1;max-width:280px;
   border-radius:20px;overflow:hidden;background:#f7f7f4}
 .photo img{width:100%;height:100%;object-fit:contain;padding:7%}
@@ -147,7 +147,7 @@ img{display:block;max-width:100%}
 .panel p{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.8}
 /* 다음 LOT 미리보기 */
 .nextlot{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
-.nextlot .en{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.nextlot .en{font-size:11.5px;font-weight:800;letter-spacing:-.02em;color:var(--dim)}
 .nextlot .th{margin:14px auto 0;width:150px;aspect-ratio:1;border-radius:18px;
   overflow:hidden;background:#f7f7f4;position:relative}
 .nextlot .th img{width:100%;height:100%;object-fit:contain;padding:8%}
@@ -230,7 +230,7 @@ img{display:block;max-width:100%}
 
   <!-- 진행 중 -->
   <section class="stage wrap hidden" id="stage">
-    <div class="lotno" id="lotno">LOT 01</div>
+    <div class="lotno" id="lotno">—</div>
     <div class="photo">
       <img id="photo" alt="" onerror="imgFail(this)">
       <div class="timer" id="timer">
@@ -281,7 +281,7 @@ img{display:block;max-width:100%}
       <p id="waitDesc">잠시만 기다려주세요.</p>
 
       <div class="nextlot hidden" id="nextlot">
-        <div class="en">FIRST LOT</div>
+        <div class="en">다음 경매</div>
         <div class="th"><img id="nextImg" alt="" onerror="imgFail(this)"></div>
         <div class="nm" id="nextName">—</div>
         <div class="st" id="nextStart"></div>
@@ -290,7 +290,7 @@ img{display:block;max-width:100%}
       <!-- 다음 LOT / 다음 사이클까지 남은 초. 반복 LIVE 에서는 항상 짧다. -->
       <div class="startcd hidden" id="startcd">
         <div class="t" id="startT">--</div>
-        <div class="lab" id="startLab">SEC</div>
+        <div class="lab" id="startLab">다음 상품</div>
       </div>
     </div>
   </section>
@@ -389,7 +389,7 @@ function render(s){
     poller.setInterval(CONFIG.POLL.live);
   }else{
     stEl.classList.remove("live");
-    stTxt.textContent = { intermission:"다음 상품", ended:"사이클 종료", idle:"준비 중" }[s.phase] || "";
+    stTxt.textContent = { intermission:"다음 상품", ended:"경매 종료", idle:"준비 중" }[s.phase] || "";
     /* 10초 인터미션/결과 구간은 lazy autoAdvance_의 트리거이므로
        15초 idle 폴링을 쓰면 실제 전환이 늦어진다. 짧은 구간만 hot 폴링. */
     poller.setInterval(
@@ -406,7 +406,7 @@ function render(s){
     $("#wait").classList.add("hidden");
     $("#bidbar").classList.remove("hidden");
 
-    $("#lotno").textContent = "LOT " + pad(cur.lot_no) + " / " + s.lots.length;
+    $("#lotno").textContent = cur.lot_no + " / " + s.lots.length + "번째 경매";
     $("#name").textContent  = cur.display_name;
 
     const img = $("#photo");
@@ -482,7 +482,7 @@ function render(s){
     /* 다음 LOT 미리보기 — 인터미션에서만 */
     if(nx && !ended){
       $("#nextlot").classList.remove("hidden");
-      $("#nextlot").querySelector(".en").textContent = "NEXT LOT " + pad(nx.lot_no);
+      $("#nextlot").querySelector(".en").textContent = "다음은 " + nx.lot_no + "번째 경매";
       const im = $("#nextImg"), src2 = CONFIG.IMG_DIR + nx.image;
       if(im.getAttribute("src") !== src2){
         im.style.display = "";
@@ -503,7 +503,7 @@ function render(s){
 
     if(ended){
       t.textContent = "잠시 후 새 경매가 시작됩니다";
-      d.textContent = "10초 후 LOT 01부터 다시 시작합니다.";
+      d.textContent = "10초 후 첫 번째 경매부터 다시 시작합니다.";
       $("#startLab").textContent = "다음 경매";
     }else{
       t.textContent = "다음 상품 준비 중";
@@ -521,7 +521,7 @@ function render(s){
     const wkey = s.cycle_id + ":" + l.lot_no;
     if(isMine(l) && !wonLots.has(wkey)){
       wonLots.add(wkey);
-      toast("LOT " + pad(l.lot_no) + " 최고가 확정 · " + money(l.final_price), "ok");
+      toast(l.lot_no + "번째 경매 최고가 확정 · " + money(l.final_price), "ok");
     }
   });
   if(done.length){
@@ -530,12 +530,12 @@ function render(s){
        state 는 서버가 소문자로 내려주지만 대소문자 방어를 걸어둔다. */
     const total  = s.lots.length;
     const closed = s.lots.filter(l => String(l.state).toLowerCase() === "closed").length;
-    $("#doneN").textContent = closed + " / " + total + " 종료";
+    $("#doneN").textContent = closed + " / " + total + " 경매 종료";
     $("#dones").innerHTML = done.map(l => `
       <div class="done">
         <div class="th"><img src="${esc(CONFIG.IMG_DIR + l.image)}" alt="${esc(l.display_name)}"
              loading="lazy" onerror="imgFail(this)"></div>
-        <div class="nm">${esc(l.display_name)}<span>LOT ${pad(l.lot_no)}${
+        <div class="nm">${esc(l.display_name)}<span>${l.lot_no}번째 경매${
           isMine(l) ? ' · <b class="mine">✓ 내가 최고가</b>' : ''}</span></div>
         <div class="p"><span>최종가</span>${money(l.final_price)}</div>
       </div>`).join("");
