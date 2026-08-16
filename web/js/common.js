@@ -173,6 +173,15 @@ async function apiPost(action, payload){
       lot_no: Number(body.lot_no),
       amount: Number(body.amount)
     };
+
+    /* 막판 입찰이 서버에서 연장 승인되면 state 재조회 전에 LIVE 타이머를 먼저 살린다.
+       다음 state 응답이 오면 서버의 정확한 close_at 으로 즉시 교정된다. */
+    if(data.extended === true && typeof LOT !== "undefined" && LOT){
+      const exactCloseAt = data.close_at || data.new_close_at || null;
+      const extendSec = (typeof STATE !== "undefined" && STATE && Number(STATE.extend_sec)) || 30;
+      LOT.close_at = exactCloseAt || new Date(serverNow() + extendSec * 1000).toISOString();
+      if(typeof showExtended === "function") showExtended();
+    }
   }
   return data;
 }
