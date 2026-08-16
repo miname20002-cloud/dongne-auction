@@ -41,7 +41,7 @@ const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const pad = n => String(n).padStart(2, "0");
 const esc = v => String(v ?? "").replace(/[&<>"']/g,
-  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[c]));
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '\"':"&quot;", "'":"&#039;" }[c]));
 
 /* ═════════ 서버 시간 ═════════ */
 let SERVER_OFFSET = 0;
@@ -78,10 +78,11 @@ function initSession(){
     Store.set("da_sid", sid);
   }
 
-  ["src", "cmp"].forEach(k => {
-    const v = q.get(k);
-    if(v && !Store.get("da_" + k, "")) Store.set("da_" + k, v);
-  });
+  /* 기존 src/cmp와 표준 UTM을 모두 지원한다. 기존 first-touch 저장 규칙은 유지한다. */
+  const srcParam = q.get("src") || q.get("utm_source");
+  const cmpParam = q.get("cmp") || q.get("utm_campaign");
+  if(srcParam && !Store.get("da_src", "")) Store.set("da_src", srcParam);
+  if(cmpParam && !Store.get("da_cmp", "")) Store.set("da_cmp", cmpParam);
 
   ["lang", "market"].forEach(k => {
     const v = q.get(k);
