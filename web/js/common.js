@@ -111,7 +111,7 @@ function makeNickname(){
 }
 
 /* LIVE 본인 최고가 표시용 보조 상태.
-   accepted 된 마지막 내 입찰만 기억하고, state 응답에 안전하게 is_mine 을 보정한다. */
+   서버 닉네임 일치가 1순위, accepted 마지막 입찰은 보조 판정으로만 사용한다. */
 let LIVE_LAST_ACCEPTED_BID = null;
 
 /* ═════════ API ═════════ */
@@ -122,20 +122,24 @@ async function apiGet(params){
   if(!res.ok) throw new Error("HTTP " + res.status);
   const data = await res.json();
 
-  if(data && data.ok && data.current_lot && LIVE_LAST_ACCEPTED_BID){
+  if(data && data.ok && data.current_lot){
     const cur = data.current_lot;
-    const mine =
+    const nicknameMine = !!cur.current_holder && !!SESSION.nickname &&
+      String(cur.current_holder) === String(SESSION.nickname);
+    const acceptedMine = !!LIVE_LAST_ACCEPTED_BID &&
       String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") === String(data.cycle_id || "") &&
       Number(LIVE_LAST_ACCEPTED_BID.lot_no) === Number(cur.lot_no) &&
       Number(LIVE_LAST_ACCEPTED_BID.amount) === Number(cur.current_price);
 
-    if(mine){
+    if(nicknameMine || acceptedMine){
       cur.is_mine = true;
-    }else if(
+    }
+
+    if(LIVE_LAST_ACCEPTED_BID && (
       String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") !== String(data.cycle_id || "") ||
       Number(LIVE_LAST_ACCEPTED_BID.lot_no) !== Number(cur.lot_no) ||
       Number(cur.current_price) > Number(LIVE_LAST_ACCEPTED_BID.amount)
-    ){
+    )){
       LIVE_LAST_ACCEPTED_BID = null;
     }
   }
