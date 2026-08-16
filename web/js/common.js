@@ -44,11 +44,6 @@ const esc = v => String(v ?? "").replace(/[&<>"']/g,
   c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[c]));
 
 /* ═════════ 서버 시간 ═════════ */
-/**
- * ⚠️ 명세 원칙: 마감·연장·유효성 판정은 서버 기준.
- * 화면 카운트다운도 브라우저 시계가 아니라 server_time 오프셋을 쓴다.
- * (PC 시간이 틀린 사용자에게 "10초 남음"인데 서버는 이미 마감된 상황 방지)
- */
 let SERVER_OFFSET = 0;
 let TIME_SYNCED = false;
 
@@ -83,13 +78,11 @@ function initSession(){
     Store.set("da_sid", sid);
   }
 
-  // 광고 attribution(src/cmp)은 first-touch — 최초 유입 값을 덮어쓰지 않는다
   ["src", "cmp"].forEach(k => {
     const v = q.get(k);
     if(v && !Store.get("da_" + k, "")) Store.set("da_" + k, v);
   });
 
-  // UI 설정(lang/market)은 사용자가 바꿀 수 있으므로 항상 최신 값
   ["lang", "market"].forEach(k => {
     const v = q.get(k);
     if(v) Store.set("da_" + k, v);
@@ -118,29 +111,8 @@ function makeNickname(){
 }
 
 /* LIVE 본인 최고가 표시용 보조 상태.
-   DOM 감시 없이 accepted 입찰만 기억하고 live.html 의 isMine 판정에만 합친다. */
+   accepted 된 마지막 내 입찰만 기억하고, state 응답에 안전하게 is_mine 을 보정한다. */
 let LIVE_LAST_ACCEPTED_BID = null;
-(function installLiveMineFallback(){
-  const page = location.pathname.split("/").pop() || "index.html";
-  if(page !== "live.html") return;
-
-  setTimeout(() => {
-    if(typeof isMine !== "function") return;
-    const serverIsMine = isMine;
-    isMine = function(l){
-      if(serverIsMine(l)) return true;
-      if(!l || !LIVE_LAST_ACCEPTED_BID) return false;
-      try{
-        return !!STATE &&
-          String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") === String(STATE.cycle_id || "") &&
-          Number(LIVE_LAST_ACCEPTED_BID.lot_no) === Number(l.lot_no) &&
-          Number(LIVE_LAST_ACCEPTED_BID.amount) === Number(l.current_price ?? l.final_price);
-      }catch(e){
-        return false;
-      }
-    };
-  }, 0);
-})();
 
 /* ═════════ API ═════════ */
 async function apiGet(params){
@@ -148,7 +120,27 @@ async function apiGet(params){
   const q = new URLSearchParams(Object.assign({ action: "state", market: SESSION.market }, params));
   const res = await fetch(CONFIG.API_URL + "?" + q.toString(), { cache: "no-store" });
   if(!res.ok) throw new Error("HTTP " + res.status);
-  return res.json();
+  const data = await res.json();
+
+  if(data && data.ok && data.current_lot && LIVE_LAST_ACCEPTED_BID){
+    const cur = data.current_lot;
+    const mine =
+      String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") === String(data.cycle_id || "") &&
+      Number(LIVE_LAST_ACCEPTED_BID.lot_no) === Number(cur.lot_no) &&
+      Number(LIVE_LAST_ACCEPTED_BID.amount) === Number(cur.current_price);
+
+    if(mine){
+      cur.is_mine = true;
+    }else if(
+      String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") !== String(data.cycle_id || "") ||
+      Number(LIVE_LAST_ACCEPTED_BID.lot_no) !== Number(cur.lot_no) ||
+      Number(cur.current_price) > Number(LIVE_LAST_ACCEPTED_BID.amount)
+    ){
+      LIVE_LAST_ACCEPTED_BID = null;
+    }
+  }
+
+  return data;
 }
 
 async function apiPost(action, payload){
@@ -164,7 +156,6 @@ async function apiPost(action, payload){
     locale    : SESSION.locale
   }, payload || {});
 
-  // ⚠️ application/json 을 쓰면 preflight 가 발생해 Apps Script 에서 CORS 오류
   const res = await fetch(CONFIG.API_URL, {
     method : "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -183,15 +174,8 @@ async function apiPost(action, payload){
 }
 
 /* ═════════ 페이지 진입 이벤트 ═════════ */
-/**
- * 퍼널 정확도를 위해 페이지마다 다른 event_type 을 쓴다.
- *   index.html   → session (landing)   ※ 최초 1회만
- *   predict.html → predict_view
- *   live.html    → view_live
- *   result.html  → result_view
- */
 async function trackLanding(){
-  if(Store.get("da_landed", "") === "1") return;      // 중복 방지
+  if(Store.get("da_landed", "") === "1") return;
   try{
     await apiPost("session", {});
     Store.set("da_landed", "1");
@@ -292,11 +276,10 @@ const REJECT_MSG = {
   rate_limit   : "너무 빠릅니다. 잠시 후 다시",
   busy         : "처리 중입니다. 잠시 후 다시",
   no_lot       : "상품을 찾을 수 없습니다",
-  /* 반복 LIVE — 락 대기 중 사이클이 넘어간 경우. 사용자 잘못이 아니다 */
   cycle_changed: "새 경매가 시작됐습니다. 다시 입찰해주세요"
 };
 
 function rejectMsg(r){
-  if(r === "bad_unit") return money(MIN_UNIT) + " 단위로 입력해주세요";  // 시장별
+  if(r === "bad_unit") return money(MIN_UNIT) + " 단위로 입력해주세요";
   return REJECT_MSG[r] || "요청이 거절되었습니다";
 }
