@@ -117,6 +117,33 @@ function makeNickname(){
   return "익명" + String(Math.floor(1000 + Math.random() * 9000));
 }
 
+/* LIVE state 가 is_mine 을 누락하더라도, 화면의 최고가 닉네임이
+   현재 세션 닉네임과 같으면 본인 표시로 보정한다. 서버 판정/입찰 로직은 건드리지 않는다. */
+(function personalizeLiveHolder(){
+  const page = location.pathname.split("/").pop() || "index.html";
+  if(page !== "live.html") return;
+
+  function rewrite(){
+    const h = document.querySelector("#holder");
+    if(!h || !SESSION.nickname) return;
+    const b = h.querySelector("b");
+    if(b && b.textContent.trim() === SESSION.nickname && h.textContent.includes("님이 최고가")){
+      h.className = "holder mine";
+      h.innerHTML = "<b>내가 최고가</b>";
+    }
+  }
+
+  function watch(){
+    const h = document.querySelector("#holder");
+    if(!h) return;
+    rewrite();
+    new MutationObserver(rewrite).observe(h, { childList:true, subtree:true, characterData:true });
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch, { once:true });
+  else watch();
+})();
+
 /* ═════════ API ═════════ */
 async function apiGet(params){
   if(!CONFIG.API_URL) throw new Error("API_URL 미설정");
