@@ -11,14 +11,25 @@ const CONFIG = {
   POLL    : { idle: 15000, live: 3000, hot: 1500 }
 };
 
-/* 광고 랜딩은 state API 응답 전에 오늘 상품 이미지를 먼저 받아둔다. */
-(function preloadLandingImages(){
+/* index / LIVE 는 state API 응답 전에 공통 상품 이미지를 먼저 받아둔다. */
+(function preloadAuctionAssets(){
   const page = location.pathname.split("/").pop() || "index.html";
-  if(page !== "index.html") return;
+  if(page !== "index.html" && page !== "live.html") return;
+
+  /* Apps Script 연결도 API 호출 직전에 미리 열어둔다. */
+  ["https://script.google.com", "https://script.googleusercontent.com"].forEach(href => {
+    const link = document.createElement("link");
+    link.rel = "preconnect";
+    link.href = href;
+    link.crossOrigin = "anonymous";
+    document.head.appendChild(link);
+  });
+
   ["nintendo-switch-oled.png", "airpods.jpg", "demon.jpg", "Helinox.jpg", "Stanley.jpg"]
     .forEach(name => {
       const img = new Image();
       img.fetchPriority = "high";
+      img.decoding = "async";
       img.src = CONFIG.IMG_DIR + name;
     });
 })();
