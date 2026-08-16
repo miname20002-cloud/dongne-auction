@@ -117,74 +117,13 @@ function makeNickname(){
   return "익명" + String(Math.floor(1000 + Math.random() * 9000));
 }
 
-/* LIVE 본인 최고가 판정 보조.
-   서버 state 의 is_mine 이 누락될 수 있으므로, 이 탭에서 실제 accepted 된 입찰과
-   최신 state 의 cycle/경매/현재가가 모두 일치할 때만 본인 최고가로 본다. */
-let LAST_ACCEPTED_BID = null;
-let LAST_LIVE_STATE = null;
-
-(function personalizeLiveHolder(){
-  const page = location.pathname.split("/").pop() || "index.html";
-  if(page !== "live.html") return;
-
-  function rewrite(){
-    const h = document.querySelector("#holder");
-    if(!h) return;
-
-    const bid = LAST_ACCEPTED_BID;
-    const st  = LAST_LIVE_STATE;
-    const mineByAcceptedBid = !!(bid && st &&
-      String(bid.cycle_id || "") === String(st.cycle_id || "") &&
-      Number(bid.lot_no) === Number(st.lot_no) &&
-      Number(bid.amount) === Number(st.current_price));
-
-    const b = h.querySelector("b");
-    const mineByNickname = !!(b && SESSION.nickname &&
-      b.textContent.trim() === SESSION.nickname && h.textContent.includes("님이 최고가"));
-
-    if(mineByAcceptedBid || mineByNickname){
-      /* 이미 원하는 상태면 DOM을 다시 쓰지 않는다.
-         MutationObserver 안에서 같은 innerHTML을 계속 쓰면 자기 자신을 다시 깨워
-         메인 스레드를 무한 점유해 Chrome의 '응답 없는 페이지'가 발생한다. */
-      if(h.classList.contains("mine") && h.textContent.trim() === "내가 최고가") return;
-      h.className = "holder mine";
-      h.innerHTML = "<b>내가 최고가</b>";
-    }
-  }
-
-  function watch(){
-    const h = document.querySelector("#holder");
-    if(!h) return;
-    rewrite();
-    new MutationObserver(rewrite).observe(h, { childList:true, subtree:true, characterData:true });
-  }
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch, { once:true });
-  else watch();
-})();
-
 /* ═════════ API ═════════ */
 async function apiGet(params){
   if(!CONFIG.API_URL) throw new Error("API_URL 미설정");
   const q = new URLSearchParams(Object.assign({ action: "state", market: SESSION.market }, params));
   const res = await fetch(CONFIG.API_URL + "?" + q.toString(), { cache: "no-store" });
   if(!res.ok) throw new Error("HTTP " + res.status);
-  const data = await res.json();
-  if(data && data.ok){
-    const cur = data.current_lot || null;
-    LAST_LIVE_STATE = {
-      cycle_id: data.cycle_id || null,
-      lot_no: cur ? cur.lot_no : null,
-      current_price: cur ? Number(cur.current_price) || 0 : 0
-    };
-    if(LAST_ACCEPTED_BID && (!cur ||
-      String(LAST_ACCEPTED_BID.cycle_id || "") !== String(data.cycle_id || "") ||
-      Number(LAST_ACCEPTED_BID.lot_no) !== Number(cur.lot_no) ||
-      Number(LAST_ACCEPTED_BID.amount) !== Number(cur.current_price))){
-      LAST_ACCEPTED_BID = null;
-    }
-  }
-  return data;
+  return res.json();
 }
 
 async function apiPost(action, payload){
@@ -207,15 +146,7 @@ async function apiPost(action, payload){
     body   : JSON.stringify(body)
   });
   if(!res.ok) throw new Error("HTTP " + res.status);
-  const data = await res.json();
-  if(action === "bid" && data && data.ok){
-    LAST_ACCEPTED_BID = {
-      cycle_id: body.cycle_id || null,
-      lot_no: Number(body.lot_no),
-      amount: Number(body.amount)
-    };
-  }
-  return data;
+  return res.json();
 }
 
 /* ═════════ 페이지 진입 이벤트 ═════════ */
