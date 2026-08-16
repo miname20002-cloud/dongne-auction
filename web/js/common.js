@@ -111,8 +111,9 @@ function makeNickname(){
 }
 
 /* LIVE 본인 최고가 표시용 보조 상태.
-   서버 닉네임 일치가 1순위, accepted 마지막 입찰은 보조 판정으로만 사용한다. */
+   서버 닉네임 일치가 1순위, accepted 입찰 기록은 현재/종료 경매 보조 판정으로 사용한다. */
 let LIVE_LAST_ACCEPTED_BID = null;
+const LIVE_ACCEPTED_BIDS = new Map();
 
 /* ═════════ API ═════════ */
 async function apiGet(params){
@@ -144,6 +145,19 @@ async function apiGet(params){
     }
   }
 
+  /* 같은 LIVE 화면에서 내가 accepted 받은 각 경매를 기억해 종료 카드에도 본인 표시를 유지한다. */
+  if(data && data.ok && Array.isArray(data.lots)){
+    data.lots.forEach(lot => {
+      const key = String(data.cycle_id || "") + ":" + Number(lot.lot_no);
+      const myAmount = LIVE_ACCEPTED_BIDS.get(key);
+      if(myAmount == null) return;
+
+      const state = String(lot.state || "").toLowerCase();
+      const comparePrice = state === "closed" ? Number(lot.final_price) : Number(lot.current_price);
+      if(comparePrice === Number(myAmount)) lot.is_mine = true;
+    });
+  }
+
   return data;
 }
 
@@ -173,6 +187,10 @@ async function apiPost(action, payload){
       lot_no: Number(body.lot_no),
       amount: Number(body.amount)
     };
+    LIVE_ACCEPTED_BIDS.set(
+      String(body.cycle_id || "") + ":" + Number(body.lot_no),
+      Number(body.amount)
+    );
 
     /* 막판 입찰이 서버에서 연장 승인되면 state 재조회 전에 LIVE 타이머를 먼저 살린다.
        다음 state 응답이 오면 서버의 정확한 close_at 으로 즉시 교정된다. */
