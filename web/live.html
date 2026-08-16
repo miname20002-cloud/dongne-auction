@@ -431,7 +431,7 @@ function render(s){
     if(cur.current_holder){
       const mine = isMine(cur);
       h.className = "holder" + (mine ? " mine" : "");
-      h.innerHTML = mine ? "<b>내가 최고가입니다</b>" : "<b>" + esc(cur.current_holder) + "</b> 님이 최고가";
+      h.innerHTML = mine ? "<b>내가 최고가</b>" : "<b>" + esc(cur.current_holder) + "</b> 님이 최고가";
     }else{
       h.className = "holder"; h.textContent = "아직 입찰이 없습니다";
     }
