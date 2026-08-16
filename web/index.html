@@ -239,7 +239,7 @@ h1,h2,h3,p,.play b,.card-name,.reward b,.reward i{word-break:keep-all;overflow-w
   <section class="sec wrap" data-rv>
     <div class="sec-head">
       <div><span class="en">TODAY'S DROP</span>
-        <h2>오늘 올라오는 <span id="lotCount">—</span>개</h2></div>
+        <h2>진행중인 경매</h2></div>
       <span class="count">전부 1,000원 시작</span>
     </div>
     <div class="drop" id="lots"></div>
@@ -323,7 +323,6 @@ function render(s){
 
   /* 상품 수는 서버 데이터가 기준 — 하드코딩하지 않는다 */
   const total = lineup.length;
-  $("#lotCount").textContent = total;
   $("#heroLine").textContent = "60초마다 바뀌는 실시간 모의경매";
   $("#heroLead").innerHTML =
     "오늘 신품 <b>" + total + "개</b> · 모의경매라 실제 결제는 없습니다";
