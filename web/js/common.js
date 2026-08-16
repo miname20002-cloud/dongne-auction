@@ -314,3 +314,17 @@ function rejectMsg(r){
   if(r === "bad_unit") return money(MIN_UNIT) + " 단위로 입력해주세요";
   return REJECT_MSG[r] || "요청이 거절되었습니다";
 }
+
+/* index 하단에서 운영 대시보드로 이동하는 작은 링크만 추가한다. */
+(function installDashboardLink(){
+  const page = location.pathname.split("/").pop() || "index.html";
+  if(page !== "index.html") return;
+  const foot = document.querySelector(".foot .wrap");
+  if(!foot || foot.querySelector("[data-dashboard-link]")) return;
+  const a = document.createElement("a");
+  a.href = "dashboard.html";
+  a.dataset.dashboardLink = "1";
+  a.textContent = "운영 DATA";
+  a.style.cssText = "display:inline-block;margin-top:9px;color:#696963;font-size:10px;font-weight:700;text-decoration:underline;text-underline-offset:3px";
+  foot.appendChild(a);
+})();
