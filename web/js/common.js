@@ -143,6 +143,10 @@ let LAST_LIVE_STATE = null;
       b.textContent.trim() === SESSION.nickname && h.textContent.includes("님이 최고가"));
 
     if(mineByAcceptedBid || mineByNickname){
+      /* 이미 원하는 상태면 DOM을 다시 쓰지 않는다.
+         MutationObserver 안에서 같은 innerHTML을 계속 쓰면 자기 자신을 다시 깨워
+         메인 스레드를 무한 점유해 Chrome의 '응답 없는 페이지'가 발생한다. */
+      if(h.classList.contains("mine") && h.textContent.trim() === "내가 최고가") return;
       h.className = "holder mine";
       h.innerHTML = "<b>내가 최고가</b>";
     }
