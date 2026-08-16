@@ -74,43 +74,23 @@ img{display:block;max-width:100%}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--lime);outline-offset:3px}
 
-
 /* ── live 전용 ── */
-
-/* 진행 표시 */
 .prog{padding:10px 0 4px;display:flex;align-items:center;gap:5px;line-height:0}
-.prog i{flex:1 1 0;min-width:0;display:block;
-  height:4px;min-height:4px;max-height:4px;
-  padding:0;margin:0;border:0;font-size:0;line-height:0;
-  background:var(--line);border-radius:999px;align-self:center}
+.prog i{flex:1 1 0;min-width:0;display:block;height:4px;min-height:4px;max-height:4px;padding:0;margin:0;border:0;font-size:0;line-height:0;background:var(--line);border-radius:999px;align-self:center}
 .prog i.done{background:var(--sold)}
 .prog i.on{background:var(--live)}
-
-/* 현재 LOT */
 .stage{padding:16px 0 4px;text-align:center}
 .lotno{font-size:12px;font-weight:800;letter-spacing:-.02em;color:var(--live)}
-.photo{margin:14px auto 0;position:relative;aspect-ratio:1;max-width:280px;
-  border-radius:20px;overflow:hidden;background:#f7f7f4}
+.photo{margin:14px auto 0;position:relative;aspect-ratio:1;max-width:280px;border-radius:20px;overflow:hidden;background:#f7f7f4}
 .photo img{width:100%;height:100%;object-fit:contain;padding:7%}
-
-/* 이미지 안 카운트다운 — 3층 구조 (트랙 / 진행 arc / 내부 원)
-   ⚠️ border + box-shadow 를 겹치는 방식으로 되돌리지 말 것.
-      테두리가 겹치면 원이 두꺼워지고 안티에일리어싱이 어긋나 찌그러져 보인다. */
-.timer{position:absolute;top:10px;right:10px;
-  width:88px;height:88px;aspect-ratio:1;flex-shrink:0;border-radius:50%}
-.timer .ring{position:absolute;inset:0;display:block;width:88px;height:88px;
-  transform:rotate(90deg);shape-rendering:geometricPrecision} /* 6시(하단) 기준 — 소모는 시계방향 */
-/* disc가 track 안쪽과 0.75px 겹치게 해서 흰 상품 이미지가 비치는 이중 링을 없앤다. */
+.timer{position:absolute;top:10px;right:10px;width:88px;height:88px;aspect-ratio:1;flex-shrink:0;border-radius:50%}
+.timer .ring{position:absolute;inset:0;display:block;width:88px;height:88px;transform:rotate(90deg);shape-rendering:geometricPrecision}
 .timer .disc{fill:rgba(10,10,9,.94)}
 .timer .track{fill:none;stroke:var(--line);stroke-width:5;vector-effect:non-scaling-stroke}
-.timer .arc{fill:none;stroke:var(--lime);stroke-width:5;stroke-linecap:round;
-  vector-effect:non-scaling-stroke;stroke-dasharray:100;stroke-dashoffset:0;
-  transition:stroke-dashoffset .25s linear,stroke .2s}
-.timer .tv{position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center}
+.timer .arc{fill:none;stroke:var(--lime);stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:100;stroke-dashoffset:0;transition:stroke-dashoffset .25s linear,stroke .2s}
+.timer .tv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .timer .k{font:800 8.5px Pretendard,sans-serif;color:var(--muted);letter-spacing:-.01em}
-.timer .n{margin:2px 0 1px;font:900 26px/1 Archivo,sans-serif;letter-spacing:-.045em;
-  color:var(--lime);font-variant-numeric:tabular-nums;transition:color .2s}
+.timer .n{margin:2px 0 1px;font:900 26px/1 Archivo,sans-serif;letter-spacing:-.045em;color:var(--lime);font-variant-numeric:tabular-nums;transition:color .2s}
 .timer .u{font:700 9px Pretendard,sans-serif;color:var(--muted)}
 .timer.hot .arc{stroke:var(--live)}
 .timer.hot .n{color:var(--live)}
@@ -119,597 +99,115 @@ img{display:block;max-width:100%}
 .timer.over .n{font-size:16px;color:var(--muted)}
 @keyframes tpulse{0%,100%{opacity:1}50%{opacity:.5}}
 .name{margin-top:18px;font-size:clamp(20px,5.6vw,26px);font-weight:800;letter-spacing:-.05em}
-
-/* 현재가 */
 .price{margin-top:14px}
 .price .lab{font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
-.price .val{margin-top:7px;font:900 clamp(38px,11vw,58px)/1 Archivo,sans-serif;
-  letter-spacing:-.055em;font-variant-numeric:tabular-nums;
-  transition:color .25s,transform .18s}
+.price .val{margin-top:7px;font:900 clamp(38px,11vw,58px)/1 Archivo,sans-serif;letter-spacing:-.055em;font-variant-numeric:tabular-nums;transition:color .25s,transform .18s}
 .price .val.bump{color:var(--lime);transform:scale(1.045)}
 .price .holder{margin-top:10px;font-size:12px;color:var(--muted)}
 .price .holder b{color:var(--text);font-weight:800}
 .price .holder.mine b{color:var(--lime)}
-
-/* 연장 배너 */
-.ext{margin-top:0;padding:0 12px;border-radius:12px;max-height:0;overflow:hidden;
-  background:rgba(255,77,77,.1);border:1px solid transparent;
-  color:#ffd7d5;font-size:12.5px;font-weight:800;text-align:center;
-  opacity:0;transform:translateY(-6px);
-  transition:opacity .25s,transform .25s,max-height .25s,padding .25s,margin-top .25s,border-color .25s}
-.ext.show{margin-top:14px;padding:12px;max-height:64px;
-  border-color:rgba(255,77,77,.4);opacity:1;transform:none}
-
-/* 대기/종료 */
-.panel{margin-top:22px;padding:30px 22px;border:1px solid var(--line);
-  border-radius:20px;text-align:center}
+.ext{margin-top:0;padding:0 12px;border-radius:12px;max-height:0;overflow:hidden;background:rgba(255,77,77,.1);border:1px solid transparent;color:#ffd7d5;font-size:12.5px;font-weight:800;text-align:center;opacity:0;transform:translateY(-6px);transition:opacity .25s,transform .25s,max-height .25s,padding .25s,margin-top .25s,border-color .25s}
+.ext.show{margin-top:14px;padding:12px;max-height:64px;border-color:rgba(255,77,77,.4);opacity:1;transform:none}
+.panel{margin-top:22px;padding:30px 22px;border:1px solid var(--line);border-radius:20px;text-align:center}
 .panel h2{font-size:22px;font-weight:800;letter-spacing:-.05em}
 .panel p{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.8}
-/* 다음 LOT 미리보기 */
 .nextlot{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
 .nextlot .en{font-size:11.5px;font-weight:800;letter-spacing:-.02em;color:var(--dim)}
-.nextlot .th{margin:14px auto 0;width:150px;aspect-ratio:1;border-radius:18px;
-  overflow:hidden;background:#f7f7f4;position:relative}
+.nextlot .th{margin:14px auto 0;width:150px;aspect-ratio:1;border-radius:18px;overflow:hidden;background:#f7f7f4;position:relative}
 .nextlot .th img{width:100%;height:100%;object-fit:contain;padding:8%}
 .nextlot .nm{margin-top:14px;font-size:18px;font-weight:800;letter-spacing:-.045em}
 .nextlot .st{margin-top:6px;font:900 15px Archivo,sans-serif;color:var(--lime);letter-spacing:-.03em}
 .nextlot .st small{font:700 10px Pretendard,sans-serif;color:var(--dim);margin-left:5px}
-/* 시작 카운트다운 */
 .startcd{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
-.startcd .t{font:700 clamp(34px,10vw,46px)/1 Archivo,sans-serif;letter-spacing:-.04em;
-  font-variant-numeric:tabular-nums;color:var(--lime)}
+.startcd .t{font:700 clamp(34px,10vw,46px)/1 Archivo,sans-serif;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--lime)}
 .startcd .t i{font-style:normal;color:var(--dim);font-weight:500}
-.startcd .lab{margin-top:10px;font:800 9.5px Archivo,sans-serif;
-  letter-spacing:.2em;color:var(--dim)}
-.panel .go{display:inline-flex;margin-top:22px;padding:12px 20px;border-radius:999px;
-  background:var(--panel2);font-size:13px;font-weight:800;letter-spacing:-.02em}
-
-/* 결과 목록 */
+.startcd .lab{margin-top:10px;font:800 9.5px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
+.panel .go{display:inline-flex;margin-top:22px;padding:12px 20px;border-radius:999px;background:var(--panel2);font-size:13px;font-weight:800;letter-spacing:-.02em}
 .sec{padding:28px 0;border-top:1px solid var(--line)}
 .sec-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:16px}
-.sec-head .en{display:block;margin-bottom:6px;font:800 10px Archivo,sans-serif;
-  letter-spacing:.2em;color:var(--dim)}
+.sec-head .en{display:block;margin-bottom:6px;font:800 10px Archivo,sans-serif;letter-spacing:.2em;color:var(--dim)}
 .sec-head h2{font-size:20px;letter-spacing:-.05em;font-weight:800}
 .sec-head .n{font:800 11px Archivo,sans-serif;color:var(--dim);letter-spacing:.08em}
 .dones{display:flex;flex-direction:column;gap:10px}
-.done{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;
-  padding:11px;background:var(--panel);border-radius:14px}
+.done{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;padding:11px;background:var(--panel);border-radius:14px}
 .done .th{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#eeeee9}
 .done .th img{width:100%;height:100%;object-fit:contain;padding:8%;filter:grayscale(.35) brightness(.85)}
-.done .nm{font-size:13.5px;font-weight:800;letter-spacing:-.04em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.done .nm{font-size:13.5px;font-weight:800;letter-spacing:-.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .done .nm span{display:block;margin-top:3px;font-size:10.5px;color:var(--dim);font-weight:500}
 .done .mine{color:var(--lime);font-weight:800}
-
-/* 회차 종료 후 내 성과 요약 */
 .done .p{font:900 18px Archivo,sans-serif;color:var(--sold);letter-spacing:-.04em;white-space:nowrap}
 .done .p span{display:block;text-align:right;font-size:10.5px;font-weight:500;color:var(--dim);letter-spacing:-.02em;margin-bottom:2px}
-
-/* 입찰창 — ⚠️ position:fixed 로 되돌리지 말 것.
-   fixed 는 뷰포트 하단에 붙어서, 콘텐츠가 짧으면 현재가와 입찰창 사이에
-   화면 높이만큼의 빈 공간이 생긴다. 흐름 안에 두어야 현재가 바로 아래에 온다. */
-.bidbar{margin-top:22px;padding:16px;text-align:left;
-  background:var(--panel);border:1px solid var(--line);border-radius:16px}
-.bidlab{margin-bottom:6px;font:800 9.5px Archivo,sans-serif;
-  letter-spacing:.18em;color:var(--dim)}
+.bidbar{margin-top:22px;padding:16px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.bidlab{margin-bottom:6px;font:800 9.5px Archivo,sans-serif;letter-spacing:.18em;color:var(--dim)}
 .quickrow{display:flex;align-items:center;gap:10px;margin-top:8px}
 .qlab{flex:0 0 auto;font-size:10.5px;font-weight:700;color:var(--dim);white-space:nowrap}
 .quick{flex:1;min-width:0;display:flex;gap:6px}
-.quick button{flex:1;min-width:0;min-height:34px;border-radius:9px;background:transparent;
-  font:800 12px Archivo,sans-serif;letter-spacing:-.03em;color:var(--muted);
-  border:1px solid var(--line);transition:background .15s,color .15s,border-color .15s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.quick button:active,.quick button.on{background:var(--panel2);color:var(--text);
-  border-color:#3a3a36}
+.quick button{flex:1;min-width:0;min-height:34px;border-radius:9px;background:transparent;font:800 12px Archivo,sans-serif;letter-spacing:-.03em;color:var(--muted);border:1px solid var(--line);transition:background .15s,color .15s,border-color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quick button:active,.quick button.on{background:var(--panel2);color:var(--text);border-color:#3a3a36}
 .quick button:disabled{opacity:.3}
 .custom{display:flex;gap:8px}
-.custom .box{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:0 16px;
-  min-height:58px;border-radius:13px;background:var(--panel2);
-  border:1px solid var(--line);transition:border-color .18s}
+.custom .box{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:0 16px;min-height:58px;border-radius:13px;background:var(--panel2);border:1px solid var(--line);transition:border-color .18s}
 .custom .box:focus-within{border-color:rgba(223,255,32,.5)}
-.custom input{flex:1;min-width:0;background:none;border:0;
-  font:900 23px Archivo,sans-serif;letter-spacing:-.04em;text-align:left;
-  font-variant-numeric:tabular-nums}
+.custom input{flex:1;min-width:0;background:none;border:0;font:900 23px Archivo,sans-serif;letter-spacing:-.04em;text-align:left;font-variant-numeric:tabular-nums}
 .custom input:focus{outline:none}
 .custom input::placeholder{color:#5c5c56;font:800 15px Pretendard,sans-serif;letter-spacing:-.02em}
 .custom .u{flex:0 0 auto;margin-left:auto;font-size:13px;font-weight:800;color:var(--muted)}
-.custom .cta{width:auto;flex:0 0 auto;min-width:88px;padding:0 20px;
-  min-height:58px;font-size:15px}
+.custom .cta{width:auto;flex:0 0 auto;min-width:88px;padding:0 20px;min-height:58px;font-size:15px}
 .bidnote{margin-top:7px;text-align:center;font-size:10px;color:var(--dim)}
 </style>
 </head>
-
 <body>
-<header class="top"><div class="wrap">
-  <div class="logo"><b>동네</b>옥션</div>
-  <div class="state" id="state"><i class="dot"></i><span id="stateTxt">연결 중</span></div>
-</div></header>
-
+<header class="top"><div class="wrap"><div class="logo"><b>동네</b>옥션</div><div class="state" id="state"><i class="dot"></i><span id="stateTxt">연결 중</span></div></div></header>
 <main>
   <div class="wrap"><div class="prog" id="prog"></div></div>
-
-  <!-- 진행 중 -->
   <section class="stage wrap hidden" id="stage">
     <div class="lotno" id="lotno">—</div>
-    <div class="photo">
-      <img id="photo" alt="" onerror="imgFail(this)">
-      <div class="timer" id="timer">
-        <svg class="ring" viewBox="0 0 88 88" aria-hidden="true">
-          <circle class="disc"  cx="44" cy="44" r="38.25"/>
-          <circle class="track" cx="44" cy="44" r="40" pathLength="100"/>
-          <circle class="arc" id="arc" cx="44" cy="44" r="40" pathLength="100"/>
-        </svg>
-        <div class="tv">
-          <div class="k">남은 시간</div>
-          <div class="n" id="clock">--</div>
-          <div class="u">초</div>
-        </div>
-      </div>
-    </div>
+    <div class="photo"><img id="photo" alt="" onerror="imgFail(this)"><div class="timer" id="timer"><svg class="ring" viewBox="0 0 88 88" aria-hidden="true"><circle class="disc" cx="44" cy="44" r="38.25"/><circle class="track" cx="44" cy="44" r="40" pathLength="100"/><circle class="arc" id="arc" cx="44" cy="44" r="40" pathLength="100"/></svg><div class="tv"><div class="k">남은 시간</div><div class="n" id="clock">--</div><div class="u">초</div></div></div></div>
     <div class="name" id="name">—</div>
-
-    <div class="price">
-      <div class="lab">CURRENT</div>
-      <div class="val" id="price">—</div>
-      <div class="holder" id="holder"></div>
-    </div>
-
+    <div class="price"><div class="lab">CURRENT</div><div class="val" id="price">—</div><div class="holder" id="holder"></div></div>
     <div class="ext" id="ext">막판 입찰 · 연장되었습니다</div>
-
-    <!-- 입찰창 — 현재가 바로 아래. 고정 바가 아니라 흐름 안의 카드다. -->
-    <div class="bidbar hidden" id="bidbar">
-      <div class="bidlab">입찰 금액</div>
-      <div class="custom">
-        <div class="box">
-          <input id="amt" type="text" inputmode="numeric" placeholder="원하는 금액 입력" aria-label="입찰 금액">
-          <span class="u" id="unit">원</span>
-        </div>
-        <button class="cta" id="bid">입찰</button>
-      </div>
-      <div class="quickrow">
-        <span class="qlab">빠른 선택</span>
-        <div class="quick" id="quick"></div>
-      </div>
-      <p class="bidnote" id="bidnote">현재가보다 높은 금액을 직접 입력하세요 · 1,000원 단위</p>
-    </div>
+    <div class="bidbar hidden" id="bidbar"><div class="bidlab">입찰 금액</div><div class="custom"><div class="box"><input id="amt" type="text" inputmode="numeric" placeholder="원하는 금액 입력" aria-label="입찰 금액"><span class="u" id="unit">원</span></div><button class="cta" id="bid">입찰</button></div><div class="quickrow"><span class="qlab">빠른 선택</span><div class="quick" id="quick"></div></div><p class="bidnote" id="bidnote">현재가보다 높은 금액을 직접 입력하세요 · 1,000원 단위</p></div>
   </section>
-
-  <!-- 대기 / 종료 -->
-  <section class="wrap hidden" id="wait">
-    <div class="panel">
-      <h2 id="waitTitle">곧 시작합니다</h2>
-      <p id="waitDesc">잠시만 기다려주세요.</p>
-
-      <div class="nextlot hidden" id="nextlot">
-        <div class="en">다음 경매</div>
-        <div class="th"><img id="nextImg" alt="" onerror="imgFail(this)"></div>
-        <div class="nm" id="nextName">—</div>
-        <div class="st" id="nextStart"></div>
-      </div>
-
-      <!-- 다음 LOT / 다음 사이클까지 남은 초. 반복 LIVE 에서는 항상 짧다. -->
-      <div class="startcd hidden" id="startcd">
-        <div class="t" id="startT">--</div>
-        <div class="lab" id="startLab">다음 상품</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 종료된 LOT -->
-  <section class="sec wrap hidden" id="doneSec">
-    <div class="sec-head">
-      <div><span class="en">CLOSED</span><h2>경매 종료</h2></div>
-      <span class="n" id="doneN">—</span>
-    </div>
-    <div class="dones" id="dones"></div>
-  </section>
+  <section class="wrap hidden" id="wait"><div class="panel"><h2 id="waitTitle">곧 시작합니다</h2><p id="waitDesc">잠시만 기다려주세요.</p><div class="nextlot hidden" id="nextlot"><div class="en">다음 경매</div><div class="th"><img id="nextImg" alt="" onerror="imgFail(this)"></div><div class="nm" id="nextName">—</div><div class="st" id="nextStart"></div></div><div class="startcd hidden" id="startcd"><div class="t" id="startT">--</div><div class="lab" id="startLab">다음 상품</div></div></div></section>
+  <section class="sec wrap hidden" id="doneSec"><div class="sec-head"><div><span class="en">CLOSED</span><h2>경매 종료</h2></div><span class="n" id="doneN">—</span></div><div class="dones" id="dones"></div></section>
 </main>
-
-<footer class="foot"><div class="wrap">
-  <div class="logo"><b>동네</b>옥션</div>
-  <p class="auto"><a href="result.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px">입찰 1회 이상이면 커피 추첨에 자동 참여됩니다</a></p>
-  <p>모의경매 · 실제 상품 판매가 아닙니다 · 결제·배송 없음</p>
-</div></footer>
-
+<footer class="foot"><div class="wrap"><div class="logo"><b>동네</b>옥션</div><p class="auto"><a href="result.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px">입찰 1회 이상이면 커피 추첨에 자동 참여됩니다</a></p><p>모의경매 · 실제 상품 판매가 아닙니다 · 결제·배송 없음</p></div></footer>
 <script src="js/common.js"></script>
 <script>
-const RING_PATH = 100; /* SVG pathLength=100 — dashoffset을 %처럼 직접 쓴다 */
-let warnedMissingDuration = false;
-let STATE = null;
-/* 대기 화면 카운트다운 목표 — render 가 서버 값(next_open_at / next_cycle_at)으로 세팅 */
-let cdTarget = null;
-let LOT = null;          // 현재 진행 LOT
-let lastPrice = 0;
-/* 연장 알림 — 모든 창이 동일하게 close_at 변화로만 판정한다.
-   close_at 은 서버가 실제로 연장했을 때만 커지므로 그 자체가 연장 이벤트 ID 역할을 한다.
-   LOT 이 바뀌면 추적을 초기화하고, 그 LOT 을 처음 본 시점의 값은 기준선으로만 쓴다
-   (이미 연장된 상태로 진입한 사람에게 지난 연장을 뒤늦게 띄우지 않기 위해). */
-/* ⚠️ 추적키에 cycle_id 가 반드시 들어가야 한다.
-   사이클이 바뀌면 lot_no 는 다시 1 로 돌아오고, 새 LOT1 의 close_at 은
-   이전 사이클 LOT1 보다 항상 크다. cycle 을 안 보면 사이클 시작을 연장으로 오인한다. */
-/* ⚠️ close_at 이 커졌다는 사실만으로는 연장이 아니다.
-   서버는 새 LOT 을 열 때(openLotRow_)와 stale 복구(recover)에서도
-   close_at 을 미래로 다시 쓴다. 진짜 연장은 writeBid_ 한 곳에서만 일어나고,
-   거기서는 close_at 과 bid_count 가 같은 쓰기로 함께 올라간다.
-   그래서 bid_count 증가를 연장의 증거로 함께 본다. */
-let extTrack = { cycle: null, lot: null, closeAt: null, bids: null };
-let sending = false;
-/* ⚠️ 키는 cycle_id + lot_no. lot_no 만 쓰면 다음 사이클의 같은 LOT 최고가를 알리지 못한다 */
-const wonLots = new Set();   /* 이미 알린 "cycle:lot" */
-
-/* ⚠️ 등급 계산은 여기 없다. result.html 한 곳에서만 한다.
-   과거 이 파일에 있던 tierOf() 는 확정 등급표와 어긋났다:
-     1/5  → ROOKIE (확정: BIDDER)
-     9/10 → SWEEP  (확정: ACE — SWEEP 은 100% 전용)
-   또한 state 에는 has_bid 가 없어 WATCHER 와 ROOKIE 를 구분할 수 없다.
-   그 판정은 action=result 만 할 수 있다. */
-
-/** 이 LOT 의 최종 최고가가 나인가 — 판정은 서버가 한다.
- *  (남의 session_id 는 응답에 포함되지 않는다) */
-function isMine(l){
-  return l && l.is_mine === true;
-}
-
-const poller = createPoller(refresh);
-
-/* ══════ 폴링 ══════ */
-let viewTracked = false;
-
-async function refresh(){
-  const s = await apiGet();
-  if(!s.ok) return;
-  syncServerTime(s.server_time);
-  setMoney(s.currency, SESSION.locale);
-  setMinUnit(s.min_unit);
-  STATE = s;
-  render(s);
-
-  /* ⚠️ view_live 는 반드시 첫 state 를 받은 뒤에 찍는다.
-     무관중 30분 뒤 첫 방문자의 state 요청이 recover 를 일으켜 새 사이클을 만든다.
-     init 에서 미리 찍으면 그 사용자가 이전 사이클(D1-C007)의 방문자로 기록되고,
-     정작 참여하는 사이클(D1-C008)의 LIVE→입찰 전환이 틀어진다. */
-  if(!viewTracked){
-    viewTracked = true;
-    trackView("view_live");
-  }
-}
-
+const RING_PATH=100;
+let warnedMissingDuration=false,STATE=null,cdTarget=null,LOT=null,lastPrice=0;
+let extTrack={cycle:null,lot:null,closeAt:null,bids:null};
+let sending=false;
+const wonLots=new Set();
+function isMine(l){return l&&l.is_mine===true;}
+const poller=createPoller(refresh);
+let viewTracked=false;
+async function refresh(){const s=await apiGet();if(!s.ok)return;syncServerTime(s.server_time);setMoney(s.currency,SESSION.locale);setMinUnit(s.min_unit);STATE=s;render(s);if(!viewTracked){viewTracked=true;trackView("view_live");}}
 function render(s){
-  const stEl = $("#state"), stTxt = $("#stateTxt");
-  const cur = s.current_lot;
-
-  /* 진행 막대 */
-  $("#prog").innerHTML = s.lots.map(l =>
-    `<i class="${l.state === "closed" ? "done" : (l.state === "onair" ? "on" : "")}"></i>`
-  ).join("");
-
-  /* 상태 라벨 */
-  if(s.phase === "live"){
-    stTxt.textContent = "LIVE"; stEl.classList.add("live");
-    poller.setInterval(CONFIG.POLL.live);
-  }else{
-    stEl.classList.remove("live");
-    stTxt.textContent = { intermission:"다음 상품", ended:"경매 종료", idle:"준비 중" }[s.phase] || "";
-    /* 10초 인터미션/결과 구간은 lazy autoAdvance_의 트리거이므로
-       15초 idle 폴링을 쓰면 실제 전환이 늦어진다. 짧은 구간만 hot 폴링. */
-    poller.setInterval(
-      (s.phase === "intermission" || s.phase === "ended")
-        ? CONFIG.POLL.hot
-        : CONFIG.POLL.idle
-    );
-  }
-
-  /* 진행 화면 */
-  if(cur){
-    LOT = cur;
-    $("#stage").classList.remove("hidden");
-    $("#wait").classList.add("hidden");
-    $("#bidbar").classList.remove("hidden");
-
-    $("#lotno").textContent = cur.lot_no + " / " + s.lots.length + "번째 경매";
-    $("#name").textContent  = cur.display_name;
-
-    const img = $("#photo");
-    const src = CONFIG.IMG_DIR + cur.image;
-    if(img.getAttribute("src") !== src){
-      img.style.display = "";
-      const old = img.parentElement.querySelector(".noimg");
-      if(old) old.remove();
-      img.src = src; img.alt = cur.display_name;
-    }
-
-    /* 가격 — 올랐으면 강조 */
-    const p = $("#price");
-    p.textContent = money(cur.current_price);
-    if(cur.current_price > lastPrice && lastPrice > 0){
-      p.classList.add("bump");
-      setTimeout(() => p.classList.remove("bump"), 450);
-    }
-    lastPrice = cur.current_price;
-
-    const h = $("#holder");
-    if(cur.current_holder){
-      const mine = isMine(cur);
-      h.className = "holder" + (mine ? " mine" : "");
-      h.innerHTML = mine ? "<b>내가 최고가</b>" : "<b>" + esc(cur.current_holder) + "</b> 님이 최고가";
-    }else{
-      h.className = "holder"; h.textContent = "아직 입찰이 없습니다";
-    }
-
-    /* ⚠️ bid_count 는 서버 필드로 유지하되 화면에는 표시하지 않는다 — 연타 유도 방지 */
-
-    /* 연장 감지 — 입찰한 사람이든 보고만 있는 사람이든 같은 경로로 정확히 1회 */
-    if(extTrack.cycle !== s.cycle_id || extTrack.lot !== cur.lot_no){
-      /* LOT(또는 사이클)이 바뀐다 — 추적값과 배너 DOM 을 함께 초기화한다.
-         변수만 리셋하면 이전 LOT 에서 켜진 .show 가 새 LOT 화면에 그대로 남는다. */
-      extTrack = { cycle: s.cycle_id, lot: cur.lot_no,
-                   closeAt: cur.close_at, bids: cur.bid_count };  // 기준선만
-      hideExtended();
-    }else if(!extTrack.closeAt){
-      /* 이 LOT 을 처음 봤을 때 close_at 이 아직 비어 있었다 — 기준선 보정만 한다. */
-      extTrack.closeAt = cur.close_at;
-      extTrack.bids    = cur.bid_count;
-    }else if(cur.close_at && new Date(cur.close_at) > new Date(extTrack.closeAt)){
-      /* close_at 이 커졌고 + 그 사이에 입찰이 실제로 들어왔다 = 연장.
-         입찰 없이 close_at 만 커진 것은 새 LOT 오픈/복구이므로 배너를 띄우지 않는다. */
-      const extended = (Number(cur.bid_count) || 0) > (Number(extTrack.bids) || 0);
-      extTrack.closeAt = cur.close_at;                            // 같은 연장 반복 표시 방지
-      extTrack.bids    = cur.bid_count;
-      if(extended) showExtended();
-    }else{
-      extTrack.bids = cur.bid_count;   // 연장으로 이어지지 않은 입찰도 기준선에 반영
-    }
-
-    renderQuick(cur.current_price);
-    $("#bidnote").textContent =
-      "현재가보다 높은 금액을 직접 입력하세요 · " + moneyPlain(MIN_UNIT) + "원 단위";
-  }else{
-    LOT = null;
-    /* 진행 중인 LOT 이 없다(인터미션/사이클 종료) — 연장 배너와 추적값을 확실히 끈다. */
-    hideExtended();
-    extTrack = { cycle: null, lot: null, closeAt: null, bids: null };
-    $("#stage").classList.add("hidden");
-    $("#bidbar").classList.add("hidden");
-    $("#wait").classList.remove("hidden");
-
-    const t = $("#waitTitle"), d = $("#waitDesc");
-    const nx = s.lots.filter(l => l.state === "wait").sort((a,b) => a.lot_no - b.lot_no)[0];
-    /* ── 반복 LIVE 의 대기 화면 ──
-       phase 는 intermission(다음 LOT) 또는 ended(사이클 결과) 둘 중 하나다.
-       ⚠️ 9시·예측 관련 분기는 전부 제거됐다. 되살리지 말 것. */
-    const ended = s.phase === "ended";
-
-    /* 다음 LOT 미리보기 — 인터미션에서만 */
-    if(nx && !ended){
-      $("#nextlot").classList.remove("hidden");
-      $("#nextlot").querySelector(".en").textContent = "다음은 " + nx.lot_no + "번째 경매";
-      const im = $("#nextImg"), src2 = CONFIG.IMG_DIR + nx.image;
-      if(im.getAttribute("src") !== src2){
-        im.style.display = "";
-        const o = im.parentElement.querySelector(".noimg"); if(o) o.remove();
-        im.src = src2; im.alt = nx.display_name;
-      }
-      $("#nextName").textContent  = nx.display_name;
-      $("#nextStart").innerHTML   = moneyPlain(s.start_price) + "원<small>START</small>";
-    }else{
-      $("#nextlot").classList.add("hidden");
-    }
-
-    /* 카운트다운 — 서버가 준 next_open_at / next_cycle_at 만 쓴다.
-       ⚠️ 클라이언트가 초를 세어 만들지 않는다. 연장·복구로 서버가 언제든 바꾼다. */
-    const target = ended ? s.next_cycle_at : s.next_open_at;
-    $("#startcd").classList.toggle("hidden", !target);
-    cdTarget = target || null;
-
-    if(ended){
-      t.textContent = "잠시 후 새 경매가 시작됩니다";
-      d.textContent = "10초 후 첫 번째 경매부터 다시 시작합니다.";
-      $("#startLab").textContent = "다음 경매";
-    }else{
-      t.textContent = "다음 상품 준비 중";
-      d.textContent = "잠시 후 시작합니다.";
-      $("#startLab").textContent = "다음 상품";
-    }
-  }
-
-  /* 종료된 LOT */
-  const done = s.lots.filter(l => String(l.state).toLowerCase() === "closed" && l.final_price > 0)
-                     .sort((a,b) => b.lot_no - a.lot_no);
-
-  /* 내가 최고가로 종료된 LOT 이 새로 생기면 알린다 */
-  done.forEach(l => {
-    const wkey = s.cycle_id + ":" + l.lot_no;
-    if(isMine(l) && !wonLots.has(wkey)){
-      wonLots.add(wkey);
-      toast(l.lot_no + "번째 경매 최고가 확정 · " + money(l.final_price), "ok");
-    }
-  });
-  if(done.length){
-    $("#doneSec").classList.remove("hidden");
-    /* LOT 개수는 s.lots.length 가 유일 기준 — 회차마다 5개/10개 가변.
-       state 는 서버가 소문자로 내려주지만 대소문자 방어를 걸어둔다. */
-    const total  = s.lots.length;
-    const closed = s.lots.filter(l => String(l.state).toLowerCase() === "closed").length;
-    $("#doneN").textContent = closed + " / " + total + " 경매 종료";
-    $("#dones").innerHTML = done.map(l => `
-      <div class="done">
-        <div class="th"><img src="${esc(CONFIG.IMG_DIR + l.image)}" alt="${esc(l.display_name)}"
-             loading="lazy" onerror="imgFail(this)"></div>
-        <div class="nm">${esc(l.display_name)}<span>${l.lot_no}번째 경매${
-          isMine(l) ? ' · <b class="mine">✓ 내가 최고가</b>' : ''}</span></div>
-        <div class="p"><span>최종가</span>${money(l.final_price)}</div>
-      </div>`).join("");
-  }else{
-    $("#doneSec").classList.add("hidden");
-  }
+ const stEl=$("#state"),stTxt=$("#stateTxt"),cur=s.current_lot;
+ $("#prog").innerHTML=s.lots.map(l=>`<i class="${l.state==="closed"?"done":(l.state==="onair"?"on":"")}"></i>`).join("");
+ if(s.phase==="live"){stTxt.textContent="LIVE";stEl.classList.add("live");poller.setInterval(CONFIG.POLL.live);}else{stEl.classList.remove("live");stTxt.textContent={intermission:"다음 상품",ended:"경매 종료",idle:"준비 중"}[s.phase]||"";poller.setInterval((s.phase==="intermission"||s.phase==="ended")?CONFIG.POLL.hot:CONFIG.POLL.idle);}
+ if(cur){LOT=cur;$("#stage").classList.remove("hidden");$("#wait").classList.add("hidden");$("#bidbar").classList.remove("hidden");$("#lotno").textContent=cur.lot_no+" / "+s.lots.length+"번째 경매";$("#name").textContent=cur.display_name;const img=$("#photo"),src=CONFIG.IMG_DIR+cur.image;if(img.getAttribute("src")!==src){img.style.display="";const old=img.parentElement.querySelector(".noimg");if(old)old.remove();img.src=src;img.alt=cur.display_name;}const p=$("#price");p.textContent=money(cur.current_price);if(cur.current_price>lastPrice&&lastPrice>0){p.classList.add("bump");setTimeout(()=>p.classList.remove("bump"),450);}lastPrice=cur.current_price;const h=$("#holder");if(cur.current_holder){const mine=isMine(cur);h.className="holder"+(mine?" mine":"");h.innerHTML=mine?"<b>내가 최고가</b>":"<b>"+esc(cur.current_holder)+"</b> 님이 최고가";}else{h.className="holder";h.textContent="아직 입찰이 없습니다";}if(extTrack.cycle!==s.cycle_id||extTrack.lot!==cur.lot_no){extTrack={cycle:s.cycle_id,lot:cur.lot_no,closeAt:cur.close_at,bids:cur.bid_count};hideExtended();}else if(!extTrack.closeAt){extTrack.closeAt=cur.close_at;extTrack.bids=cur.bid_count;}else if(cur.close_at&&new Date(cur.close_at)>new Date(extTrack.closeAt)){const extended=(Number(cur.bid_count)||0)>(Number(extTrack.bids)||0);extTrack.closeAt=cur.close_at;extTrack.bids=cur.bid_count;if(extended)showExtended();}else{extTrack.bids=cur.bid_count;}renderQuick(cur.current_price);$("#bidnote").textContent="현재가보다 높은 금액을 직접 입력하세요 · "+moneyPlain(MIN_UNIT)+"원 단위";
+ }else{LOT=null;hideExtended();extTrack={cycle:null,lot:null,closeAt:null,bids:null};$("#stage").classList.add("hidden");$("#bidbar").classList.add("hidden");$("#wait").classList.remove("hidden");const t=$("#waitTitle"),d=$("#waitDesc"),nx=s.lots.filter(l=>l.state==="wait").sort((a,b)=>a.lot_no-b.lot_no)[0],ended=s.phase==="ended";if(nx&&!ended){$("#nextlot").classList.remove("hidden");$("#nextlot").querySelector(".en").textContent="다음은 "+nx.lot_no+"번째 경매";const im=$("#nextImg"),src2=CONFIG.IMG_DIR+nx.image;if(im.getAttribute("src")!==src2){im.style.display="";const o=im.parentElement.querySelector(".noimg");if(o)o.remove();im.src=src2;im.alt=nx.display_name;}$("#nextName").textContent=nx.display_name;$("#nextStart").innerHTML=moneyPlain(s.start_price)+"원<small>START</small>";}else{$("#nextlot").classList.add("hidden");}const target=ended?s.next_cycle_at:s.next_open_at;$("#startcd").classList.toggle("hidden",!target);cdTarget=target||null;if(ended){t.textContent="잠시 후 새 경매가 시작됩니다";d.textContent="10초 후 첫 번째 경매부터 다시 시작합니다.";$("#startLab").textContent="다음 경매";}else{t.textContent="다음 상품 준비 중";d.textContent="잠시 후 시작합니다.";$("#startLab").textContent="다음 상품";}}
+ const done=s.lots.filter(l=>String(l.state).toLowerCase()==="closed"&&l.final_price>0).sort((a,b)=>b.lot_no-a.lot_no);done.forEach(l=>{const wkey=s.cycle_id+":"+l.lot_no;if(isMine(l)&&!wonLots.has(wkey)){wonLots.add(wkey);toast(l.lot_no+"번째 경매 최고가 확정 · "+money(l.final_price),"ok");}});if(done.length){$("#doneSec").classList.remove("hidden");const total=s.lots.length,closed=s.lots.filter(l=>String(l.state).toLowerCase()==="closed").length;$("#doneN").textContent=closed+" / "+total+" 경매 종료";$("#dones").innerHTML=done.map(l=>`<div class="done"><div class="th"><img src="${esc(CONFIG.IMG_DIR+l.image)}" alt="${esc(l.display_name)}" loading="lazy" onerror="imgFail(this)"></div><div class="nm">${esc(l.display_name)}<span>${l.lot_no}번째 경매${isMine(l)?' · <b class="mine">✓ 내가 최고가</b>':''}</span></div><div class="p"><span>최종가</span>${money(l.final_price)}</div></div>`).join("");}else{$("#doneSec").classList.add("hidden");}
 }
-
-/* ══════ 빠른 입찰 버튼 ══════ */
-/* 버튼에 "실제로 입찰하게 될 금액"을 표시한다 (+1,000 이 아니라 7,000원) */
-function showExtended(){
-  const e = $("#ext");
-  e.classList.add("show");
-  clearTimeout(e._t);
-  e._t = setTimeout(() => e.classList.remove("show"), 3200);
-}
-
-/* LOT 변경·인터미션·사이클 종료에서 호출한다.
-   3.2초 자동 숨김 타이머에만 의존하면 백그라운드 탭에서 타이머가
-   지연될 때 배너가 다음 LOT 까지 그대로 남는다. */
-function hideExtended(){
-  const e = $("#ext");
-  clearTimeout(e._t);
-  e.classList.remove("show");
-}
-
-function renderQuick(cur){
-  const u = MIN_UNIT;
-  const vals = [cur + u, cur + u * 5, cur + u * 10];
-  $("#quick").innerHTML = vals.map(v =>
-    `<button data-set="${v}">${money(v)}</button>`
-  ).join("");
-  $("#unit").textContent = MONEY.currency === "KRW" ? "원" : MONEY.currency;
-}
-
-/* ⚠️ 즉시 입찰하지 않는다. 입력창에 금액만 채우고 최종 확정은 [입찰] 버튼으로. */
-$("#quick").addEventListener("click", e => {
-  const b = e.target.closest("button[data-set]");
-  if(!b || !LOT) return;
-  const v = Number(b.dataset.set);
-  $("#amt").value = v.toLocaleString("ko-KR");
-  $$(".quick button").forEach(x => x.classList.toggle("on", x === b));
-  $("#amt").focus();
-});
-
-/* ══════ 직접 입력 ══════ */
-$("#amt").addEventListener("input", e => {
-  const raw = e.target.value.replace(/[^\d]/g, "");
-  e.target.value = raw ? Number(raw).toLocaleString("ko-KR") : "";
-  $$(".quick button").forEach(x => x.classList.remove("on"));
-});
-$("#bid").addEventListener("click", () => {
-  const raw = $("#amt").value.replace(/[^\d]/g, "");
-  if(!raw) return toast("금액을 입력해주세요", "err");
-  sendBid(Number(raw));
-});
-
-/* ══════ 입찰 전송 ══════ */
+function showExtended(){const e=$("#ext");e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),3200);}
+function hideExtended(){const e=$("#ext");clearTimeout(e._t);e.classList.remove("show");}
+function renderQuick(cur){const u=MIN_UNIT,vals=[cur+u,cur+u*5,cur+u*10];$("#quick").innerHTML=vals.map(v=>`<button data-set="${v}">${money(v)}</button>`).join("");$("#unit").textContent=MONEY.currency==="KRW"?"원":MONEY.currency;}
+$("#quick").addEventListener("click",e=>{const b=e.target.closest("button[data-set]");if(!b||!LOT)return;const v=Number(b.dataset.set);$("#amt").value=v.toLocaleString("ko-KR");$$(".quick button").forEach(x=>x.classList.toggle("on",x===b));$("#amt").focus();});
+$("#amt").addEventListener("input",e=>{const raw=e.target.value.replace(/[^\d]/g,"");e.target.value=raw?Number(raw).toLocaleString("ko-KR"):"";$$(".quick button").forEach(x=>x.classList.remove("on"));});
+$("#bid").addEventListener("click",()=>{const raw=$("#amt").value.replace(/[^\d]/g,"");if(!raw)return toast("금액을 입력해주세요","err");sendBid(Number(raw));});
 async function sendBid(amount){
-  if(sending || !LOT) return;
-
-  /* 로컬 선검증 — 서버 왕복 아끼기 */
-  if(amount % MIN_UNIT !== 0) return toast(rejectMsg("bad_unit"), "err");
-  if(amount <= LOT.current_price) return toast(rejectMsg("below_current"), "err");
-
-  sending = true;
-  const btn = $("#bid");
-  btn.disabled = true;
-  $$(".quick button").forEach(b => b.disabled = true);
-
-  try{
-    /* ⚠️ cycle_id 를 반드시 함께 보낸다.
-       사이클이 넘어간 뒤 옛 화면에서 누르면 lot_no 만으로는 새 사이클의
-       같은 번호 LOT 에 입찰이 들어간다 (LOT1 은 매 사이클 다시 생긴다).
-       서버가 cycle_id 를 대조해 cycle_changed 로 거절한다. */
-    const r = await apiPost("bid", {
-      lot_no  : LOT.lot_no,
-      amount  : amount,
-      cycle_id: STATE && STATE.cycle_id
-    });
-    if(r.ok){
-      $("#amt").value = "";
-      $$(".quick button").forEach(x => x.classList.remove("on"));
-      toast(money(amount) + " 입찰 완료", "ok");
-      /* r.extended 로 즉시 띄우지 않는다 — 바로 아래 refresh() 가
-         다른 창과 똑같은 close_at 경로로 처리해 중복/불일치를 없앤다 */
-      await refresh();
-    }else{
-      toast(rejectMsg(r.reason), "err");
-      await refresh();
-    }
-  }catch(err){
-    toast("연결이 불안정합니다. 다시 시도해주세요", "err");
-  }finally{
-    sending = false;
-    btn.disabled = false;
-    $$(".quick button").forEach(b => b.disabled = false);
-  }
+ if(sending||!LOT)return;
+ if(amount%MIN_UNIT!==0)return toast(rejectMsg("bad_unit"),"err");
+ if(amount<=LOT.current_price)return toast(rejectMsg("below_current"),"err");
+ sending=true;const btn=$("#bid");btn.disabled=true;$$(".quick button").forEach(b=>b.disabled=true);
+ try{const r=await apiPost("bid",{lot_no:LOT.lot_no,amount:amount,cycle_id:STATE&&STATE.cycle_id});if(r.ok){$("#amt").value="";$$(".quick button").forEach(x=>x.classList.remove("on"));toast(money(amount)+" 입찰 완료","ok");refresh().catch(err=>console.warn("[refresh]",err));}else{toast(rejectMsg(r.reason),"err");refresh().catch(err=>console.warn("[refresh]",err));}}catch(err){toast("연결이 불안정합니다. 다시 시도해주세요","err");}finally{sending=false;btn.disabled=false;$$(".quick button").forEach(b=>b.disabled=false);}
 }
-
-/* 게이지 분모는 서버가 내려주는 config 원본 lot_duration 하나만 사용한다.
-   클라이언트 추정/하드코딩을 하지 않는다. 필드가 없으면 숫자 타이머는 정상 동작하고
-   게이지만 100%로 유지해 배포 누락을 눈에 띄게 만든다. */
-function resolveLotDuration(state){
-  const n = Number(state && state.lot_duration);
-  if(Number.isFinite(n) && n > 0) return n;
-  if(!warnedMissingDuration){
-    warnedMissingDuration = true;
-    console.warn('[timer] state.lot_duration missing — deploy latest Apps Script');
-  }
-  return 0;
-}
-
-function updateRing(left, lot){
-  const arc = document.getElementById('arc');
-  if(!arc) return;
-
-  const dur = resolveLotDuration(STATE);
-  const ratio = dur > 0 ? Math.max(0, Math.min(1, left / dur)) : 1;
-  const remain = RING_PATH * ratio;
-  const consumed = RING_PATH - remain;
-
-  /* 게이지 소모 방향: 6시(하단)에서 시작해 시계방향으로 빈 구간이 늘어난다.
-     남은 라임 arc는 '소모된 지점 → 다시 6시' 구간만 표시한다. */
-  arc.style.strokeDasharray = remain.toFixed(2) + " " + RING_PATH;
-  arc.style.strokeDashoffset = (-consumed).toFixed(2);
-  arc.style.opacity = ratio <= 0 ? "0" : "1";
-  arc.dataset.ratio = ratio.toFixed(4);
-  arc.dataset.duration = String(dur || 0);
-}
-
-/* ══════ 로컬 타이머 (서버 시간 기준) ══════ */
-setInterval(() => {
-  /* 대기 화면 — 다음 LOT / 다음 사이클까지. 항상 10초 안팎이라 초만 보여준다. */
-  if(!LOT && cdTarget){
-    const l = secondsUntil(cdTarget);
-    const el = $("#startT");
-    if(l !== null && el) el.textContent = Math.max(0, Math.ceil(l));
-  }
-  if(!LOT || !LOT.close_at) return;
-  const left = secondsUntil(LOT.close_at);
-  if(left === null) return;
-  const s = Math.max(0, Math.ceil(left));
-
-  /* 판정은 전부 서버 close_at + server_time 오프셋(secondsUntil). 여기서는 표시만 한다. */
-  $("#clock").textContent = s > 0 ? s : "마감";
-  /* ⚠️ hot 구간은 '지금 입찰하면 연장되는 구간'이다.
-     연장 시간(extend_sec)이 아니라 진입 조건(extend_trigger_sec)을 쓴다. */
-  const hotSec = (STATE && Number(STATE.extend_trigger_sec)) || 15;
-  $("#timer").className = "timer"
-    + (s <= 0                 ? " over"   : "")
-    + (s <= hotSec && s > 0   ? " hot"    : "")
-    + (s <= 5 && s > 0        ? " urgent" : "");
-
-  /* 진행 게이지 — 서버 close_at 기준 left를 시각화만 한다. */
-  updateRing(left, LOT);
-
-  /* 막판엔 폴링을 조인다 */
-  poller.setInterval(s <= hotSec ? CONFIG.POLL.hot : CONFIG.POLL.live);
-}, 250);
-
-/* ══════ 시작 ══════ */
-(function init(){
-  if(!CONFIG.API_URL){
-    $("#wait").classList.remove("hidden");
-    $("#waitTitle").textContent = "API_URL 미설정";
-    $("#waitDesc").textContent = "js/common.js 의 CONFIG.API_URL 을 확인하세요.";
-    return;
-  }
-  if(!SESSION.nickname) setNickname(makeNickname());
-  /* view_live 는 refresh() 안에서 첫 state 수신 후 1회 호출한다 */
-  poller.setInterval(CONFIG.POLL.live);
-  poller.start();
-})();
+function resolveLotDuration(state){const n=Number(state&&state.lot_duration);if(Number.isFinite(n)&&n>0)return n;if(!warnedMissingDuration){warnedMissingDuration=true;console.warn('[timer] state.lot_duration missing — deploy latest Apps Script');}return 0;}
+function updateRing(left,lot){const arc=document.getElementById('arc');if(!arc)return;const dur=resolveLotDuration(STATE),ratio=dur>0?Math.max(0,Math.min(1,left/dur)):1,remain=RING_PATH*ratio,consumed=RING_PATH-remain;arc.style.strokeDasharray=remain.toFixed(2)+" "+RING_PATH;arc.style.strokeDashoffset=(-consumed).toFixed(2);arc.style.opacity=ratio<=0?"0":"1";arc.dataset.ratio=ratio.toFixed(4);arc.dataset.duration=String(dur||0);}
+setInterval(()=>{if(!LOT&&cdTarget){const l=secondsUntil(cdTarget),el=$("#startT");if(l!==null&&el)el.textContent=Math.max(0,Math.ceil(l));}if(!LOT||!LOT.close_at)return;const left=secondsUntil(LOT.close_at);if(left===null)return;const s=Math.max(0,Math.ceil(left));$("#clock").textContent=s>0?s:"마감";const hotSec=(STATE&&Number(STATE.extend_trigger_sec))||15;$("#timer").className="timer"+(s<=0?" over":"")+(s<=hotSec&&s>0?" hot":"")+(s<=5&&s>0?" urgent":"");updateRing(left,LOT);poller.setInterval(s<=hotSec?CONFIG.POLL.hot:CONFIG.POLL.live);},250);
+(function init(){if(!CONFIG.API_URL){$("#wait").classList.remove("hidden");$("#waitTitle").textContent="API_URL 미설정";$("#waitDesc").textContent="js/common.js 의 CONFIG.API_URL 을 확인하세요.";return;}if(!SESSION.nickname)setNickname(makeNickname());poller.setInterval(CONFIG.POLL.live);poller.start();})();
 </script>
 </body>
 </html>
