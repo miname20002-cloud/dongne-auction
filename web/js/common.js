@@ -117,6 +117,31 @@ function makeNickname(){
   return "익명" + String(Math.floor(1000 + Math.random() * 9000));
 }
 
+/* LIVE 본인 최고가 표시용 보조 상태.
+   DOM 감시 없이 accepted 입찰만 기억하고 live.html 의 isMine 판정에만 합친다. */
+let LIVE_LAST_ACCEPTED_BID = null;
+(function installLiveMineFallback(){
+  const page = location.pathname.split("/").pop() || "index.html";
+  if(page !== "live.html") return;
+
+  setTimeout(() => {
+    if(typeof isMine !== "function") return;
+    const serverIsMine = isMine;
+    isMine = function(l){
+      if(serverIsMine(l)) return true;
+      if(!l || !LIVE_LAST_ACCEPTED_BID) return false;
+      try{
+        return !!STATE &&
+          String(LIVE_LAST_ACCEPTED_BID.cycle_id || "") === String(STATE.cycle_id || "") &&
+          Number(LIVE_LAST_ACCEPTED_BID.lot_no) === Number(l.lot_no) &&
+          Number(LIVE_LAST_ACCEPTED_BID.amount) === Number(l.current_price ?? l.final_price);
+      }catch(e){
+        return false;
+      }
+    };
+  }, 0);
+})();
+
 /* ═════════ API ═════════ */
 async function apiGet(params){
   if(!CONFIG.API_URL) throw new Error("API_URL 미설정");
@@ -146,7 +171,15 @@ async function apiPost(action, payload){
     body   : JSON.stringify(body)
   });
   if(!res.ok) throw new Error("HTTP " + res.status);
-  return res.json();
+  const data = await res.json();
+  if(action === "bid" && data && data.ok){
+    LIVE_LAST_ACCEPTED_BID = {
+      cycle_id: body.cycle_id || null,
+      lot_no: Number(body.lot_no),
+      amount: Number(body.amount)
+    };
+  }
+  return data;
 }
 
 /* ═════════ 페이지 진입 이벤트 ═════════ */
