@@ -15,7 +15,7 @@ const CONFIG = {
 (function preloadLandingImages(){
   const page = location.pathname.split("/").pop() || "index.html";
   if(page !== "index.html") return;
-  ["nintendo-switch-oled.png", "airpods.jpg", "lego.jpg", "demon.jpg", "Stanley.jpg"]
+  ["nintendo-switch-oled.png", "airpods.jpg", "demon.jpg", "Helinox.jpg", "Stanley.jpg"]
     .forEach(name => {
       const img = new Image();
       img.fetchPriority = "high";
